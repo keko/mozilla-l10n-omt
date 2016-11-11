@@ -25,10 +25,10 @@
 
 
 # Path to the folder where the projects are placed
-Ruta_Root="/home/ana/Dropbox/localizacion/mozilla"
+Ruta_Root="/home/ana/mozilla"
 
 # Change by the name of the project. In this case, prox-omt-moz
-omt_path="prox-webs-mozilla"
+omt_path="prox-omt-moz"
 
 # Identifica o idioma ao que se traducirán os proxectos de Mozilla.
 # Hai que modificar o seu valor, polo código de locale do seu idioma.
@@ -96,6 +96,35 @@ function exist_git_repo(){
 		fi
 }
 
+# Check if a folder exist. In case afirmativ, it deletes the folder.
+function if_exist_delete(){ 
+	if [ -d $1 ]
+		then
+			rm -r $1
+		fi
+}
+
+# Check if a folder exist. In case afirmativ, it deletes the folder. It always creates the folder.
+function if_exist_delete_create(){ 
+	if [ -d $1 ]
+		then
+			rm -r $1
+		fi
+	mkdir -p $1
+}
+
+# Remove all files into the target folder of the OmegaT project.
+function remove_target_files(){
+	if [ -d ./$omt_path/target ]
+		then
+			[ "$(ls -A ./$omt_path/target)" ] && rm -r ./$omt_path/target/*
+		else
+			echored "Error: The target folder does not exist."
+			echoyellow "Isto significa:"
+			echoyellow "	- Ou ben non existe o proxecto de OmegaT no marco de traballo. Ten que crealo."
+			echoyellow "	- Ou o proxecto está mal creado. Volva a crealo ou modifique a configuración do proxecto."
+		fi	
+}
 #############################################################################################
 
 function init(){
@@ -125,8 +154,8 @@ function init(){
 			echoyellow "The $omt_path folder already exists."
 			echoyellow "Then, the OmegaT project is already created."
 		else
-			echogreen "The $omt_path project of OmegaT does not exist."
-			echogreen "Launch OmegaT and create the $omt_path project using the user manual."
+			echored "Error: The $omt_path project of OmegaT does not exist."
+			echoyellow "Launch OmegaT and create the $omt_path project using the user manual."
 		fi
 
 
@@ -186,12 +215,9 @@ function get_l10n(){
 		then
 			if [ -d ./$git_path/$reponame/$locale_code ]
 				then
-					if [ -d ./$omt_path/source/$reponame ]
-						then
-							rm -r ./$omt_path/source/$reponame
-						fi
 					echogreen "Copying l10n files for the $reponame project into OmegaT Project."
-					mkdir $omt_path/source/$reponame
+					if_exist_delete_create ./$omt_path/source/$reponame
+
 					cp -r ./$git_path/$reponame/$locale_code/* ./$omt_path/source/$reponame/
 					echogreen "Copied l10n files into OmegaT."
 				else
@@ -199,7 +225,7 @@ function get_l10n(){
 					echoyellow "Contact with the Mozilla l10n team to activate the project for your locale."
 				fi
 		else
-			echoyellow "The $reponame repository does not exist."
+			echored "Error: The $reponame repository does not exist."
 			echoyellow "Try ./mozilla.sh cloneRepo $reponame to clone the project."
 		fi
 }
@@ -278,7 +304,7 @@ function clone_hg_repos(){
 			if [ -d ./$hg_path/$reponame/$locale/.hg ]
 				then
 					echoyellow "The $1/$locale repository already exist."
-					echoyellow "Try ./mozilla.sh '''ALGO''' $1 $locale to update the repository."
+					echoyellow "Try ./mozilla.sh updateHg $1 $locale to update the repository."
 				else
 					echogreen "Cloning the $1/$locale repository."
 					cd $hg_path/$reponame
@@ -328,12 +354,8 @@ function get_l10n_Gaia(){
 
 	if [ -d ./$hg_path/gaia-l10n/en-US/.hg ]
 		then
-			if [ -d ./$omt_path/source/gaia-l10n ]
-				then
-					rm -r ./$omt_path/source/gaia-l10n
-				fi
 			echogreen "Copying l10n files for the gaia-l10n repository into OmegaT Project."
-			mkdir $omt_path/source/gaia-l10n
+			if_exist_delete_create ./$omt_path/source/gaia-l10n
 			cp -r ./$hg_path/gaia-l10n/en-US/* ./$omt_path/source/gaia-l10n/
 			echogreen "Copied l10n files into OmegaT."
 		else
@@ -365,8 +387,6 @@ function return_l10n_Gaia(){
 		fi
 }
 
-
-
 function clone_hg_channel(){
 	# $1: (project)repository name
 	local reponame="$1"
@@ -385,7 +405,7 @@ function clone_hg_channel(){
 			if [ -d ./$hg_path/$reponame/.hg ]
 				then
 					echoyellow "The $1 repository already exist."
-					echoyellow "Try ./mozilla.sh '''ALGO''' $1 to update the repository."
+					echoyellow "Try ./mozilla.sh updateChannel $1 to update the repository."
 				else
 					echogreen "Cloning the $1 repository."
 					mkdir -p $hg_path/$repo_path
