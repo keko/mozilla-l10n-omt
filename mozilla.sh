@@ -19,13 +19,13 @@
 
 ## -
 
-# Código e estrutura do script baseado noutro de Miguel Bouzada
+# execute « [bash |./]mozilla TASK [REPOSITORY(or project)] »
 
 ## Script pretende permitir a creación dun proxecto en OmegaT para traducir as páxinas webs e outros servizos-proxectos de Mozilla e a xestión de actualización da tradución
 
 
 # Path to the folder where the projects are placed
-Ruta_Root="/home/ana/mozilla"
+root_path="/home/keko/mozilla"
 
 Ruta_Locales="locales/en-US"
 
@@ -37,8 +37,11 @@ omt_path="prox-omt-moz"
 locale_code="gl"
 
 # Note: replace "ssh:/" with "https:/" if you don't have SSH access to hg.mozilla.org
-mode="https:/"
+mode="ssh:/"
 mozilla_url="hg.mozilla.org"
+
+# "https://github.com/mozilla-l10n/$reponame.git"
+github_url="git@github.com:mozilla-l10n"
 
 git_path="git"
 hg_path="hg"
@@ -175,15 +178,14 @@ function clone_repo_mozilla_l10n(){
 			echoyellow "The $reponame repository already exists."
 			echoyellow "Try ./mozilla.sh updateRepo $reponame to update the repository."
 		else
-			# "https://github.com/mozilla-l10n/$reponame.git"
-			local url="git@github.com:mozilla-l10n/$reponame.git"
+			local url="$github_url/$reponame.git"
 
 			if exist_git_repo $url
 				then
 					echogreen "Cloning the $reponame repository."
 					cd $git_path
 					git clone $url
-					cd $Ruta_Root
+					cd $root_path
 					echogreen "Cloned the $reponame repository."
 				else
 					echored "Error: Unable to read from $url"
@@ -201,7 +203,7 @@ function update_repo_mozilla_l10n(){
 			echogreen "Updating the $reponame repository."
 			cd ./$git_path/$reponame
 			git pull
-			cd $Ruta_Root
+			cd $root_path
 			echogreen "Updated the $reponame repository."
 		else
 			echored "Error: The $reponame repository does not exist."
@@ -311,7 +313,7 @@ function clone_hg_repos(){
 					echogreen "Cloning the $1/$locale repository."
 					cd $hg_path/$reponame
 					hg clone $url
-					cd $Ruta_Root
+					cd $root_path
 					echogreen "Cloned the $1/$locale repository."
 				fi
 		else
@@ -344,7 +346,7 @@ function update_hg_repos(){
 			echogreen "Updating the $1/$locale repository."
 			cd $hg_path/$reponame/$locale
 			hg pull -u
-			cd $Ruta_Root
+			cd $root_path
 			echogreen "Updated the $1/$locale repository."
 		else
 			echored "Error: The $1/$locale repository does not exist."
@@ -415,7 +417,7 @@ function clone_hg_channel(){
 					hg clone $url
 					cd $1
 					python client.py checkout
-					cd $Ruta_Root
+					cd $root_path
 					echogreen "Cloned the $1 repository."
 
 				fi
@@ -440,7 +442,7 @@ function update_hg_channel(){
 			echogreen "Updating the $1 repository."
 			cd ./$hg_path/$reponame
 			python client.py checkout
-			cd $Ruta_Root
+			cd $root_path
 			echogreen "Updated the $1 repository."
 		else
 			echored "Error: The $reponame repository does not exist."
@@ -1144,28 +1146,92 @@ function move_files_suite(){
 }
 #############################################################################################
 
-param=$1
-[ $param = "" ] && exit 0
-[ $param = --help ] && simple_help
-[ $param = init ] && init
-[ $param = cloneRepo ] && clone_repo_mozilla_l10n $2
-[ $param = updateRepo ] && update_repo_mozilla_l10n $2
-[ $param = getL10n ] && get_l10n $2
-[ $param = returnL10n ] && return_l10n $2
-[ $param = cloneHg ] && clone_hg_repos $2 $3
-[ $param = updateHg ] && update_hg_repos $2 $3
-[ $param = getGaia ] && get_l10n_Gaia
-[ $param = returnGaia ] && return_l10n_Gaia
-[ $param = cloneChannel ] && clone_hg_channel $2
-[ $param = updateChannel ] && update_hg_channel $2
-[ $param = getFirefox ] && get_files_browser $2 && get_files_toolkit $2 && get_files_dom $2 && get_files_netwerk $2 && get_files_other-licenses $2 && get_files_security $2 && get_files_services $2
-[ $param = moveFirefox ] && move_files_browser $2 && move_files_toolkit $2 && move_files_rest $2
-[ $param = getFennec ] && get_files_mobile $2
-[ $param = moveFennec ] && move_files_mobile $2
-[ $param = getThunderbird ] && get_files_mail $2 && get_files_editor $2 && get_files_chat $2 && get_files_calendar $2
-[ $param = moveThunderbird ] && move_files_mail $2 && move_files_editor $2 && move_files_chat $2 && move_files_calendar $2
-[ $param = getSeaMonkey ] && get_files_suite $2
-[ $param = moveSeaMonkey ] && move_files_suite $2
-[ $param = removeAll ] && remove_target_files
+
+
+#############################################################################################
+function usage(){
+	echogreen "Usage: ./mozilla.sh TASK [REPOSITORY(or project)]"
+	echo ""
+	echo "For more information, execute ./mozilla.sh --help"
+}
+
+function simple_help(){
+	echogreen "Usage: ./mozilla.sh TASK [REPOSITORY(or project)]"
+	echo ""
+	echo "The script can execute the following tasks:"
+	echo "	init		Initialize the framework. It creates the hg and git folders, if the"
+	echo "			folders do not exist. It indicates whether the OmegaT project is created."
+	echo ""
+	echo "	cloneRepo	Clone the selected repository in the framework. Only supports git"
+	echo "			repositories for l10n-mozilla GitHub account."
+	echo "			Example of usage: ./mozilla.sh cloneRepo www.mozilla.org"
+	echo "	updateRepo	Updates the selected repository in the framework. Updates the cloned repositories"
+	echo "			with the 'cloneRepo' task."
+	echo "	getL10n		Get the l10n files for the selected repository. Copy the l10n files of project"
+	echo "			selected into source folder in the OmegaT project. Works with the cloned repositories"
+	echo "			with the 'cloneRepo' task."
+	echo "	returnL10n	Send the translated l10n files from the OmegaT project to the local repository."
+	echo ""
+	echo "	cloneHg		Clone the repository selected in the framework. Only supports hg repositories."
+	echo "			The cloned repositories have only l10n files."
+	echo "			Example of usage: ./mozilla.sh cloneHg l10n-central"
+	echo "	updateHg	Updates the selected repository in the framework. Updates the cloned repositories"
+	echo "			with the 'cloneHg' task."
+	echo ""
+	echo "	getGaia		Get the l10n files for the Gaia project (repository). Copy the l10n files of Gaia"
+	echo "			into source folder in the OmegaT project. Works with the cloned repositories"
+	echo "			with the 'cloneHg' task."
+	echo "			Example of usage: ./mozilla.sh getGaia"
+	echo "	returnGaia	Send the translated l10n files from the OmegaT project to the local repository."
+	echo ""
+	echo "	cloneChannel	Clone the selected repository in the framework. Only supports hg repositories."
+	echo "			The cloned repositories have source code and l10n files."
+	echo "			Example of usage: ./mozilla.sh cloneChannel comm-central."
+	echo "	updateChannel	Updates the selected repository in the framework. Updates the cloned repositories"
+	echo "			with the 'cloneChannel' task."
+	echo "	getFirefox	Get the l10n files for the Firefox product from the selected repository. Copy the"
+	echo "			l10n files into source folder in the OmegaT project."
+	echo "	moveFirefox	Send the translated l10n files from the OmegaT project to the selected local repository."
+	echo "	getFennec	Similar to the 'getFirefox' task but for the Fennec project."
+	echo "	moveFennec	Similar to the 'moveFirefox' task but for the Fennec project."
+	echo "	getThunderbird	Similar to the 'getFirefox' task but for the Thunderbird project."
+	echo "	moveThunderbird	Similar to the 'moveFirefox' task but for the Thunderbird project."
+	echo "	getSeaMonkey	Similar to the 'getFirefox' task but for the SeaMonkey project."
+	echo "	moveSeaMonkey	Similar to the 'moveFirefox' task but for the SeaMonkey project."
+	echo ""
+	echo "	removeAll	Delete all l10n files in the target folder of the OmegaT project."
+	echo ""
+	echo "For more information for each task, see the user manual."
+
+}
+#############################################################################################
+
+if [ $# -eq 0 ]
+	then
+		usage
+	else
+		param=$1
+		[ $param = --help ] && simple_help
+		[ $param = init ] && init
+		[ $param = cloneRepo ] && clone_repo_mozilla_l10n $2
+		[ $param = updateRepo ] && update_repo_mozilla_l10n $2
+		[ $param = getL10n ] && get_l10n $2
+		[ $param = returnL10n ] && return_l10n $2
+		[ $param = cloneHg ] && clone_hg_repos $2 $3
+		[ $param = updateHg ] && update_hg_repos $2 $3
+		[ $param = getGaia ] && get_l10n_Gaia
+		[ $param = returnGaia ] && return_l10n_Gaia
+		[ $param = cloneChannel ] && clone_hg_channel $2
+		[ $param = updateChannel ] && update_hg_channel $2
+		[ $param = getFirefox ] && get_files_browser $2 && get_files_toolkit $2 && get_files_dom $2 && get_files_netwerk $2 && get_files_other-licenses $2 && get_files_security $2 && get_files_services $2
+		[ $param = moveFirefox ] && move_files_browser $2 && move_files_toolkit $2 && move_files_rest $2
+		[ $param = getFennec ] && get_files_mobile $2
+		[ $param = moveFennec ] && move_files_mobile $2
+		[ $param = getThunderbird ] && get_files_mail $2 && get_files_editor $2 && get_files_chat $2 && get_files_calendar $2
+		[ $param = moveThunderbird ] && move_files_mail $2 && move_files_editor $2 && move_files_chat $2 && move_files_calendar $2
+		[ $param = getSeaMonkey ] && get_files_suite $2
+		[ $param = moveSeaMonkey ] && move_files_suite $2
+		[ $param = removeAll ] && remove_target_files
+	fi
 
 #.EOF
