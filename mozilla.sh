@@ -617,7 +617,6 @@ function get_files_mobile(){
 			# Files to exclude of OmegaT
 			rm -r ./$omt_path/source/$reponame/mobile/searchplugins
 			rm -r ./$omt_path/source/$reponame/mobile/chrome
-			rm -r ./$omt_path/source/$reponame/mobile/profile
 			rm -r ./$omt_path/source/$reponame/mobile/android/defines.inc
 			rm -r ./$omt_path/source/$reponame/mobile/android/mobile-l10n.js
 			echogreen "Copied l10n files into OmegaT."
