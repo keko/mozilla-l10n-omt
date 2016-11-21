@@ -470,10 +470,15 @@ function get_files_browser(){
 			echogreen "Copying l10n files for the $1 repository into OmegaT Project."
 			if_exist_delete_create ./$omt_path/source/$reponame/browser
 			cp -r ./$hg_path/$reponame/mozilla/browser/${Ruta_Locales}/* ./$omt_path/source/$reponame/browser
+			mkdir -p ./$omt_path/source/$reponame/devtools/client
+			mkdir -p ./$omt_path/source/$reponame/devtools/shared
+			cp -r ./$hg_path/$reponame/mozilla/devtools/client/${Ruta_Locales}/* ./$omt_path/source/$reponame/devtools/client
+			cp -r ./$hg_path/$reponame/mozilla/devtools/shared/${Ruta_Locales}/* ./$omt_path/source/$reponame/devtools/shared
 			mkdir -p ./$omt_path/source/$reponame/browser/branding/official
 			cp -r ./$hg_path/$reponame/mozilla/browser/branding/official/${Ruta_Locales}/* ./$omt_path/source/$reponame/browser/branding/official
 			# Files to exclude of OmegaT
-			rm -r ./$omt_path/source/$reponame/browser/searchplugins
+			# Bug 1276740 - Centralize all search plugins into mozilla-central
+			# rm -r ./$omt_path/source/$reponame/browser/searchplugins
 			rm -r ./$omt_path/source/$reponame/browser/chrome/browser-region
 			rm -r ./$omt_path/source/$reponame/browser/defines.inc
 			rm -r ./$omt_path/source/$reponame/browser/firefox-l10n.js
@@ -513,7 +518,9 @@ function move_files_browser(){
 					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/browser/updater
 					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/browser/chrome/browser
 					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/browser/chrome/overrides
+					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/devtools
 					cp -r ./$omt_path/target/$path/comm-$1/browser/* ./$hg_path/$target_path/$reponame/$locale_code/browser/
+					cp -r ./$omt_path/target/$path/comm-$1/devtools ./$hg_path/$target_path/$reponame/$locale_code/
 					echogreen "Updated the translations of repository."
 				else
 					echored "Error: There is no translations. Do not exist the project into target folder."
@@ -964,7 +971,7 @@ function get_files_otherlicenses(){
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
 			echogreen "Copying l10n files for the $1 repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/$reponame/other-licenses
+			if_exist_delete_create ./$omt_path/source/$reponame/other-licenses/branding/thunderbird
 			cp -r ./$hg_path/$reponame/other-licenses/branding/thunderbird/${Ruta_Locales}/* ./$omt_path/source/$reponame/other-licenses/branding/thunderbird
 			echogreen "Copied l10n files into OmegaT."
 		else
@@ -1223,7 +1230,7 @@ if [ $# -eq 0 ]
 		[ $param = returnGaia ] && return_l10n_Gaia
 		[ $param = cloneChannel ] && clone_hg_channel $2
 		[ $param = updateChannel ] && update_hg_channel $2
-		[ $param = getFirefox ] && get_files_browser $2 && get_files_toolkit $2 && get_files_dom $2 && get_files_netwerk $2 && get_files_other-licenses $2 && get_files_security $2 && get_files_services $2
+		[ $param = getFirefox ] && get_files_browser $2 && get_files_toolkit $2 && get_files_dom $2 && get_files_netwerk $2 && get_files_otherlicenses $2 && get_files_security $2 && get_files_services $2
 		[ $param = moveFirefox ] && move_files_browser $2 && move_files_toolkit $2 && move_files_rest $2
 		[ $param = getFennec ] && get_files_mobile $2
 		[ $param = moveFennec ] && move_files_mobile $2
