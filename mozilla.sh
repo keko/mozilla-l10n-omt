@@ -37,7 +37,7 @@ omt_path="prox-omt-moz"
 locale_code="gl"
 
 # Note: replace "ssh:/" with "https:/" if you don't have SSH access to hg.mozilla.org
-mode="ssh:/"
+mode="https:/"
 mozilla_url="hg.mozilla.org"
 
 # "https://github.com/mozilla-l10n/$reponame.git"
@@ -103,6 +103,7 @@ function exist_git_repo(){
 
 # Check if a folder exist. In case afirmativ, it deletes the folder.
 function if_exist_delete(){
+	cd $root_path
 	if [ -d $1 ]
 		then
 			rm -r $1
@@ -111,6 +112,7 @@ function if_exist_delete(){
 
 # Check if a folder exist. In case afirmativ, it deletes the folder. It always creates the folder.
 function if_exist_delete_create(){
+	cd $root_path
 	if [ -d $1 ]
 		then
 			rm -r $1
@@ -120,6 +122,7 @@ function if_exist_delete_create(){
 
 # Remove all files into the target folder of the OmegaT project.
 function remove_target_files(){
+	cd $root_path
 	if [ -d ./$omt_path/target ]
 		then
 			[ "$(ls -A ./$omt_path/target)" ] && rm -r ./$omt_path/target/*
@@ -133,6 +136,7 @@ function remove_target_files(){
 #############################################################################################
 
 function init(){
+	cd $root_path
 
 	if [ -d ./$git_path ]
 		then
@@ -173,6 +177,8 @@ function clone_repo_mozilla_l10n(){
 	# $1: (project)repository name
 	local reponame="$1"
 
+	cd $root_path
+
 	if [ -d ./$git_path/$reponame/.git ]
 		then
 			echoyellow "The $reponame repository already exists."
@@ -198,6 +204,8 @@ function update_repo_mozilla_l10n(){
 	# $1: (project)repository name
 	local reponame="$1"
 
+	cd $root_path
+
 	if [ -d ./$git_path/$reponame/.git ]
 		then
 			echogreen "Updating the $reponame repository."
@@ -214,6 +222,8 @@ function update_repo_mozilla_l10n(){
 function get_l10n(){
 	# $1: (project)repository name
 	local reponame="$1"
+
+	cd $root_path
 
 	if [ -d ./$git_path/$reponame/.git ]
 		then
@@ -237,6 +247,8 @@ function get_l10n(){
 function return_l10n(){
 	# $1: (project)repository name
 	local reponame="$1"
+
+	cd $root_path
 
 	if [ -d ./$git_path/$reponame/.git ]
 		then
@@ -269,32 +281,15 @@ function return_l10n(){
 
 
 # Funcións para clonar, actualizar, obter os ficheiros l10n e devolvelos traducidos para
-# os proxectos de Mozilla nos repositorios Mercurial.
-# A función clone_hg_repos() clonar o repositorio central para o locale definido na variable
-# ou para o que se lle pase como parámetro. Útil, para coa mesma función clonar o repositorio
-# en-US para Gaia.
+# os proxectos de Mozilla nos repositorios Mercurial para a canle Central.
 #############################################################################################
-# Clona os repositorios l10n-central, mozilla-aurora, mozilla-beta e gaia-l10n para o locale
-# definido na variable locale_code. Tamén clona o repositorio gaia-l10n para o locale pasado
-# por parámetro, pensado para en-US (fontes). Clónao sen permisos de escrita.
-function clone_hg_repos(){
-	# $1: (project)repository name
-	local reponame="$1"
-	local locale=""
 
-	if [ $# -eq 2 ]
-		then
-			locale=$2
-			mode="https:/"
+# Clona o repositorio l10n-central para o locale definido na variable locale_code.
+function clone_hg_repo(){
+	local reponame="l10n-central"
+	local locale=$locale_code
 
-		else
-			locale=$locale_code
-		fi
-
-	if [ $reponame == "mozilla-aurora" ] || [ $reponame == "mozilla-beta" ]
-		then
-			reponame="releases/l10n/$reponame"
-		fi
+	cd $root_path
 
 	local url="$mode/$mozilla_url/$reponame/$locale"
 
@@ -307,100 +302,44 @@ function clone_hg_repos(){
 
 			if [ -d ./$hg_path/$reponame/$locale/.hg ]
 				then
-					echoyellow "The $1/$locale repository already exist."
-					echoyellow "Try ./mozilla.sh updateHg $1 $locale to update the repository."
+					echoyellow "The $reponame/$locale repository already exist."
+					echoyellow "Try ./mozilla.sh updateHg to update the $reponame/$locale repository."
 				else
-					echogreen "Cloning the $1/$locale repository."
+					echogreen "Cloning the $reponame/$locale repository."
 					cd $hg_path/$reponame
 					hg clone $url
 					cd $root_path
-					echogreen "Cloned the $1/$locale repository."
+					echogreen "Cloned the $reponame/$locale repository."
 				fi
 		else
 			echored "Error: Unable to read from $url"
-			echored "Seems that the $1/$locale repository does not exist."
+			echored "Seems that the $reponame/$locale repository does not exist."
 		fi
 }
 
-function update_hg_repos(){
-	# $1: (project)repository name
-	local reponame="$1"
-	local locale=""
+function update_hg_repo(){
+	local reponame="l10n-central"
+	local locale=$locale_code
 
-	if [ $# -eq 2 ]
-		then
-			locale=$2
-			mode="https:/"
-
-		else
-			locale=$locale_code
-		fi
-
-	if [ $reponame == "mozilla-aurora" ] || [ $reponame == "mozilla-beta" ]
-		then
-			reponame="releases/l10n/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/$locale/.hg ]
 		then
-			echogreen "Updating the $1/$locale repository."
+			echogreen "Updating the $reponame/$locale repository."
 			cd $hg_path/$reponame/$locale
 			hg pull -u
 			cd $root_path
-			echogreen "Updated the $1/$locale repository."
+			echogreen "Updated the $reponame/$locale repository."
 		else
-			echored "Error: The $1/$locale repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneHg $1 $locale to clone the repository."
-		fi
-}
-
-function get_l10n_Gaia(){
-
-	if [ -d ./$hg_path/gaia-l10n/en-US/.hg ]
-		then
-			echogreen "Copying l10n files for the gaia-l10n repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/gaia-l10n
-			cp -r ./$hg_path/gaia-l10n/en-US/* ./$omt_path/source/gaia-l10n/
-			echogreen "Copied l10n files into OmegaT."
-		else
-			echoyellow "The gaia-l10n/en-US repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneHg gaia-l10n en-US to clone the repository."
-		fi
-}
-
-function return_l10n_Gaia(){
-
-	if [ -d ./$hg_path/gaia-l10n/$locale_code/.hg ]
-		then
-			if [ -d ./$omt_path/target/gaia-l10n ]
-				then
-						echogreen "Updating the translations of gaia-l10n/$locale_code repository."
-						rm -r ./$hg_path/gaia-l10n/$locale_code/*
-						cp -r ./$omt_path/target/gaia-l10n/* ./$hg_path/gaia-l10n/$locale_code/
-						echogreen "Updated the translations of project."
-					else
-						echored "Error: There is no translations. Do not exist the project into target folder."
-						echoyellow "Create the translated files with OmegaT and if the project does not exist into source folder:"
-						echoyellow "Execute ./mozilla.sh getGaia to copy the l10n files into OmegaT."
-				fi
-		else
-			echored "Error: The gaia-l10n/$locale_code repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneHg gaia-l10n clone the repository."
-			echoyellow "Then ./mozilla.sh getGaia to copy the l10n files into OmegaT."
-			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh returnGaia again."
+			echored "Error: The $reponame/$locale repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneHg to clone the $reponame/$locale repository."
 		fi
 }
 
 function clone_hg_channel(){
-	# $1: (project)repository name
-	local reponame="$1"
-	local repo_path="."
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-			repo_path="releases"
-		fi
+	cd $root_path
 
 	local url="https://$mozilla_url/$reponame"
 
@@ -408,45 +347,40 @@ function clone_hg_channel(){
 		then
 			if [ -d ./$hg_path/$reponame/.hg ]
 				then
-					echoyellow "The $1 repository already exist."
-					echoyellow "Try ./mozilla.sh updateChannel $1 to update the repository."
+					echoyellow "The $reponame repository already exist."
+					echoyellow "Try ./mozilla.sh updateChannel to update the $reponame repository."
 				else
-					echogreen "Cloning the $1 repository."
-					mkdir -p $hg_path/$repo_path
-					cd $hg_path/$repo_path
+					echogreen "Cloning the $reponame repository."
+					cd $hg_path
 					hg clone $url
-					cd $1
+					cd $reponame
 					python client.py checkout
 					cd $root_path
-					echogreen "Cloned the $1 repository."
+					echogreen "Cloned the $reponame repository."
 
 				fi
 		else
 			echored "Error: Unable to read from $url"
-			echored "Seems that the $1 repository does not exist."
+			echored "Seems that the $reponame repository does not exist."
 		fi
 
 }
 
 function update_hg_channel(){
-	# $1: (project)repository name
-	local reponame="$1"
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			echogreen "Updating the $1 repository."
+			echogreen "Updating the $reponame repository."
 			cd ./$hg_path/$reponame
 			python client.py checkout
 			cd $root_path
-			echogreen "Updated the $1 repository."
+			echogreen "Updated the $reponame repository."
 		else
 			echored "Error: The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel $reponame to clone the repository."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
@@ -539,6 +473,8 @@ function get_files_toolkit(){
 	# $1: (project)repository name
 	local reponame="$1"
 
+	cd $root_path
+
 	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
 		then
 			reponame="releases/$reponame"
@@ -564,6 +500,8 @@ function move_files_toolkit(){
 	local reponame="$1"
 	local path="."
 	local target_path="."
+
+	cd $root_path
 
 	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
 		then
@@ -600,6 +538,8 @@ function get_files_mobile(){
 	# $1: (project)repository name
 	local reponame="$1"
 
+	cd $root_path
+
 	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
 		then
 			reponame="releases/$reponame"
@@ -631,6 +571,8 @@ function move_files_mobile(){
 	local reponame="$1"
 	local path="."
 	local target_path="."
+
+	cd $root_path
 
 	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
 		then
@@ -669,6 +611,8 @@ function get_files_editor(){
 	# $1: (project)repository name
 	local reponame="$1"
 
+	cd $root_path
+
 	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
 		then
 			reponame="releases/$reponame"
@@ -694,6 +638,8 @@ function move_files_editor(){
 	local reponame="$1"
 	local path="."
 	local target_path="."
+
+	cd $root_path
 
 	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
 		then
@@ -730,6 +676,8 @@ function get_files_mail(){
 	# $1: (project)repository name
 	local reponame="$1"
 
+	cd $root_path
+
 	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
 		then
 			reponame="releases/$reponame"
@@ -758,6 +706,8 @@ function move_files_mail(){
 	local reponame="$1"
 	local path="."
 	local target_path="."
+
+	cd $root_path
 
 	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
 		then
@@ -802,6 +752,8 @@ function get_files_calendar(){
 	# $1: (project)repository name
 	local reponame="$1"
 
+	cd $root_path
+
 	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
 		then
 			reponame="releases/$reponame"
@@ -828,6 +780,8 @@ function move_files_calendar(){
 	local reponame="$1"
 	local path="."
 	local target_path="."
+
+	cd $root_path
 
 	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
 		then
@@ -863,6 +817,8 @@ function get_files_chat(){
 	# $1: (project)repository name
 	local reponame="$1"
 
+	cd $root_path
+
 	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
 		then
 			reponame="releases/$reponame"
@@ -885,6 +841,8 @@ function move_files_chat(){
 	local reponame="$1"
 	local path="."
 	local target_path="."
+
+	cd $root_path
 
 	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
 		then
@@ -920,6 +878,8 @@ function get_files_dom(){
 	# $1: (project)repository name
 	local reponame="$1"
 
+	cd $root_path
+
 	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
 		then
 			reponame="releases/$reponame"
@@ -940,6 +900,8 @@ function get_files_dom(){
 function get_files_netwerk(){
 	# $1: (project)repository name
 	local reponame="$1"
+
+	cd $root_path
 
 	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
 		then
@@ -962,6 +924,8 @@ function get_files_otherlicenses(){
 	# $1: (project)repository name
 	local reponame="$1"
 
+	cd $root_path
+
 	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
 		then
 			reponame="releases/$reponame"
@@ -982,6 +946,8 @@ function get_files_otherlicenses(){
 function get_files_security(){
 	# $1: (project)repository name
 	local reponame="$1"
+
+	cd $root_path
 
 	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
 		then
@@ -1004,6 +970,8 @@ function get_files_security(){
 function get_files_services(){
 	# $1: (project)repository name
 	local reponame="$1"
+
+	cd $root_path
 
 	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
 		then
@@ -1028,6 +996,8 @@ function move_files_rest(){
 	local reponame="$1"
 	local path="."
 	local target_path="."
+
+	cd $root_path
 
 	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
 		then
@@ -1072,6 +1042,8 @@ function get_files_suite(){
 	# $1: (project)repository name
 	local reponame="$1"
 
+	cd $root_path
+
 	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
 		then
 			reponame="releases/$reponame"
@@ -1105,6 +1077,8 @@ function move_files_suite(){
 	local reponame="$1"
 	local path="."
 	local target_path="."
+
+	cd $root_path
 
 	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
 		then
@@ -1178,17 +1152,11 @@ function simple_help(){
 	echo "			with the 'cloneRepo' task."
 	echo "	returnL10n	Send the translated l10n files from the OmegaT project to the local repository."
 	echo ""
-	echo "	cloneHg		Clone the repository selected in the framework. Only supports hg repositories."
-	echo "			The cloned repositories have only l10n files."
+	echo "	cloneHg		Clone the l10n-central/$locale_code repository in the framework."
+	echo "			The cloned repository has only l10n files."
 	echo "			Example of usage: ./mozilla.sh cloneHg l10n-central"
-	echo "	updateHg	Updates the selected repository in the framework. Updates the cloned repositories"
-	echo "			with the 'cloneHg' task."
-	echo ""
-	echo "	getGaia		Get the l10n files for the Gaia project (repository). Copy the l10n files of Gaia"
-	echo "			into source folder in the OmegaT project. Works with the cloned repositories"
-	echo "			with the 'cloneHg' task."
-	echo "			Example of usage: ./mozilla.sh getGaia"
-	echo "	returnGaia	Send the translated l10n files from the OmegaT project to the local repository."
+	echo "	updateHg	Update the l10n-central/$locale_code repository in the framework."
+	echo "			Update the cloned repository with the 'cloneHg' task."
 	echo ""
 	echo "	cloneChannel	Clone the selected repository in the framework. Only supports hg repositories."
 	echo "			The cloned repositories have source code and l10n files."
@@ -1223,10 +1191,8 @@ if [ $# -eq 0 ]
 		[ $param = updateRepo ] && update_repo_mozilla_l10n $2
 		[ $param = getL10n ] && get_l10n $2
 		[ $param = returnL10n ] && return_l10n $2
-		[ $param = cloneHg ] && clone_hg_repos $2 $3
-		[ $param = updateHg ] && update_hg_repos $2 $3
-		[ $param = getGaia ] && get_l10n_Gaia
-		[ $param = returnGaia ] && return_l10n_Gaia
+		[ $param = cloneHg ] && clone_hg_repo
+		[ $param = updateHg ] && update_hg_repo
 		[ $param = cloneChannel ] && clone_hg_channel $2
 		[ $param = updateChannel ] && update_hg_channel $2
 		[ $param = getFirefox ] && get_files_browser $2 && get_files_toolkit $2 && get_files_dom $2 && get_files_netwerk $2 && get_files_otherlicenses $2 && get_files_security $2 && get_files_services $2
