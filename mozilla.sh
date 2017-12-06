@@ -336,6 +336,60 @@ function update_hg_repo(){
 		fi
 }
 
+
+function clone_hg_l10n(){
+	mode="https:/"
+	reponame="l10n/gecko-strings"
+
+	cd $root_path
+
+	local url="$mode/$mozilla_url/$reponame"
+
+	if exist_hg_repo $url
+		then
+			if [ ! -d ./$hg_path/$reponame ]
+				then
+					mkdir -p ./$hg_path/$reponame
+				fi
+
+			if [ -d ./$hg_path/$reponame/.hg ]
+				then
+					echoyellow "The $reponame repository already exist."
+					echoyellow "Try ./mozilla.sh updateL10n to update the repository."
+				else
+					echogreen "Cloning the $reponame repository."
+					cd $hg_path/$reponame
+					hg clone $url
+					cd $root_path
+					echogreen "Cloned the $reponame repository."
+				fi
+		else
+			echored "Error: Unable to read from $url"
+			echored "Seems that the $reponame repository does not exist."
+		fi
+}
+
+
+function update_hg_l10n(){
+	mode="https:/"
+	local reponame="l10n/gecko-strings"
+
+	cd $root_path
+
+	if [ -d ./$hg_path/$reponame/.hg ]
+		then
+			echogreen "Updating the $reponame repository."
+			cd $hg_path/$reponame
+			hg pull -u
+			cd $root_path
+			echogreen "Updated the $reponame repository."
+		else
+			echored "Error: The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneL10n to clone the $reponame repository."
+		fi
+}
+
+
 function clone_hg_channel(){
 	local reponame="comm-central"
 
@@ -1158,6 +1212,9 @@ function simple_help(){
 	echo "	updateHg	Update the l10n-central/$locale_code repository in the framework."
 	echo "			Update the cloned repository with the 'cloneHg' task."
 	echo ""
+	echo "	cloneL10n	Clone the gecko-strings repository in the framework."
+	echo "	updateL10n	Update the gecko-strings repository in the framework."
+	echo ""
 	echo "	cloneChannel	Clone the selected repository in the framework. Only supports hg repositories."
 	echo "			The cloned repositories have source code and l10n files."
 	echo "			Example of usage: ./mozilla.sh cloneChannel comm-central."
@@ -1193,6 +1250,8 @@ if [ $# -eq 0 ]
 		[ $param = returnL10n ] && return_l10n $2
 		[ $param = cloneHg ] && clone_hg_repo
 		[ $param = updateHg ] && update_hg_repo
+		[ $param = cloneL10n ] && clone_hg_l10n
+		[ $param = updateL10n ] && update_hg_l10n
 		[ $param = cloneChannel ] && clone_hg_channel $2
 		[ $param = updateChannel ] && update_hg_channel $2
 		[ $param = getFirefox ] && get_files_browser $2 && get_files_toolkit $2 && get_files_dom $2 && get_files_netwerk $2 && get_files_otherlicenses $2 && get_files_security $2 && get_files_services $2
