@@ -37,7 +37,7 @@ omt_path="prox-omt-moz"
 locale_code="gl"
 
 # Note: replace "ssh:/" with "https:/" if you don't have SSH access to hg.mozilla.org
-mode="ssh:/"
+mode="https:/"
 mozilla_url="hg.mozilla.org"
 
 # "https://github.com/mozilla-l10n/$reponame.git"
@@ -103,6 +103,7 @@ function exist_git_repo(){
 
 # Check if a folder exist. In case afirmativ, it deletes the folder.
 function if_exist_delete(){
+	cd $root_path
 	if [ -d $1 ]
 		then
 			rm -r $1
@@ -111,6 +112,7 @@ function if_exist_delete(){
 
 # Check if a folder exist. In case afirmativ, it deletes the folder. It always creates the folder.
 function if_exist_delete_create(){
+	cd $root_path
 	if [ -d $1 ]
 		then
 			rm -r $1
@@ -120,6 +122,7 @@ function if_exist_delete_create(){
 
 # Remove all files into the target folder of the OmegaT project.
 function remove_target_files(){
+	cd $root_path
 	if [ -d ./$omt_path/target ]
 		then
 			[ "$(ls -A ./$omt_path/target)" ] && rm -r ./$omt_path/target/*
@@ -133,6 +136,7 @@ function remove_target_files(){
 #############################################################################################
 
 function init(){
+	cd $root_path
 
 	if [ -d ./$git_path ]
 		then
@@ -173,6 +177,8 @@ function clone_repo_mozilla_l10n(){
 	# $1: (project)repository name
 	local reponame="$1"
 
+	cd $root_path
+
 	if [ -d ./$git_path/$reponame/.git ]
 		then
 			echoyellow "The $reponame repository already exists."
@@ -198,6 +204,8 @@ function update_repo_mozilla_l10n(){
 	# $1: (project)repository name
 	local reponame="$1"
 
+	cd $root_path
+
 	if [ -d ./$git_path/$reponame/.git ]
 		then
 			echogreen "Updating the $reponame repository."
@@ -214,6 +222,8 @@ function update_repo_mozilla_l10n(){
 function get_l10n(){
 	# $1: (project)repository name
 	local reponame="$1"
+
+	cd $root_path
 
 	if [ -d ./$git_path/$reponame/.git ]
 		then
@@ -237,6 +247,8 @@ function get_l10n(){
 function return_l10n(){
 	# $1: (project)repository name
 	local reponame="$1"
+
+	cd $root_path
 
 	if [ -d ./$git_path/$reponame/.git ]
 		then
@@ -269,32 +281,15 @@ function return_l10n(){
 
 
 # Funcións para clonar, actualizar, obter os ficheiros l10n e devolvelos traducidos para
-# os proxectos de Mozilla nos repositorios Mercurial.
-# A función clone_hg_repos() clonar o repositorio central para o locale definido na variable
-# ou para o que se lle pase como parámetro. Útil, para coa mesma función clonar o repositorio
-# en-US para Gaia.
+# os proxectos de Mozilla nos repositorios Mercurial para a canle Central.
 #############################################################################################
-# Clona os repositorios l10n-central, mozilla-aurora, mozilla-beta e gaia-l10n para o locale
-# definido na variable locale_code. Tamén clona o repositorio gaia-l10n para o locale pasado
-# por parámetro, pensado para en-US (fontes). Clónao sen permisos de escrita.
-function clone_hg_repos(){
-	# $1: (project)repository name
-	local reponame="$1"
-	local locale=""
 
-	if [ $# -eq 2 ]
-		then
-			locale=$2
-			mode="https:/"
+# Clona o repositorio l10n-central para o locale definido na variable locale_code.
+function clone_hg_repo(){
+	local reponame="l10n-central"
+	local locale=$locale_code
 
-		else
-			locale=$locale_code
-		fi
-
-	if [ $reponame == "mozilla-aurora" ] || [ $reponame == "mozilla-beta" ]
-		then
-			reponame="releases/l10n/$reponame"
-		fi
+	cd $root_path
 
 	local url="$mode/$mozilla_url/$reponame/$locale"
 
@@ -307,100 +302,98 @@ function clone_hg_repos(){
 
 			if [ -d ./$hg_path/$reponame/$locale/.hg ]
 				then
-					echoyellow "The $1/$locale repository already exist."
-					echoyellow "Try ./mozilla.sh updateHg $1 $locale to update the repository."
+					echoyellow "The $reponame/$locale repository already exist."
+					echoyellow "Try ./mozilla.sh updateHg to update the $reponame/$locale repository."
 				else
-					echogreen "Cloning the $1/$locale repository."
+					echogreen "Cloning the $reponame/$locale repository."
 					cd $hg_path/$reponame
 					hg clone $url
 					cd $root_path
-					echogreen "Cloned the $1/$locale repository."
+					echogreen "Cloned the $reponame/$locale repository."
 				fi
 		else
 			echored "Error: Unable to read from $url"
-			echored "Seems that the $1/$locale repository does not exist."
+			echored "Seems that the $reponame/$locale repository does not exist."
 		fi
 }
 
-function update_hg_repos(){
-	# $1: (project)repository name
-	local reponame="$1"
-	local locale=""
+function update_hg_repo(){
+	local reponame="l10n-central"
+	local locale=$locale_code
 
-	if [ $# -eq 2 ]
-		then
-			locale=$2
-			mode="https:/"
-
-		else
-			locale=$locale_code
-		fi
-
-	if [ $reponame == "mozilla-aurora" ] || [ $reponame == "mozilla-beta" ]
-		then
-			reponame="releases/l10n/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/$locale/.hg ]
 		then
-			echogreen "Updating the $1/$locale repository."
+			echogreen "Updating the $reponame/$locale repository."
 			cd $hg_path/$reponame/$locale
 			hg pull -u
 			cd $root_path
-			echogreen "Updated the $1/$locale repository."
+			echogreen "Updated the $reponame/$locale repository."
 		else
-			echored "Error: The $1/$locale repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneHg $1 $locale to clone the repository."
+			echored "Error: The $reponame/$locale repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneHg to clone the $reponame/$locale repository."
 		fi
 }
 
-function get_l10n_Gaia(){
 
-	if [ -d ./$hg_path/gaia-l10n/en-US/.hg ]
+function clone_hg_l10n(){
+	mode="https:/"
+	reponame="l10n/gecko-strings"
+
+	cd $root_path
+
+	local url="$mode/$mozilla_url/$reponame"
+
+	if exist_hg_repo $url
 		then
-			echogreen "Copying l10n files for the gaia-l10n repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/gaia-l10n
-			cp -r ./$hg_path/gaia-l10n/en-US/* ./$omt_path/source/gaia-l10n/
-			echogreen "Copied l10n files into OmegaT."
-		else
-			echoyellow "The gaia-l10n/en-US repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneHg gaia-l10n en-US to clone the repository."
-		fi
-}
-
-function return_l10n_Gaia(){
-
-	if [ -d ./$hg_path/gaia-l10n/$locale_code/.hg ]
-		then
-			if [ -d ./$omt_path/target/gaia-l10n ]
+			if [ ! -d ./$hg_path/$reponame ]
 				then
-						echogreen "Updating the translations of gaia-l10n/$locale_code repository."
-						rm -r ./$hg_path/gaia-l10n/$locale_code/*
-						cp -r ./$omt_path/target/gaia-l10n/* ./$hg_path/gaia-l10n/$locale_code/
-						echogreen "Updated the translations of project."
-					else
-						echored "Error: There is no translations. Do not exist the project into target folder."
-						echoyellow "Create the translated files with OmegaT and if the project does not exist into source folder:"
-						echoyellow "Execute ./mozilla.sh getGaia to copy the l10n files into OmegaT."
+					mkdir -p ./$hg_path/$reponame
+				fi
+
+			if [ -d ./$hg_path/$reponame/.hg ]
+				then
+					echoyellow "The $reponame repository already exist."
+					echoyellow "Try ./mozilla.sh updateL10n to update the repository."
+				else
+					echogreen "Cloning the $reponame repository."
+					cd $hg_path/$reponame
+					hg clone $url
+					cd $root_path
+					echogreen "Cloned the $reponame repository."
 				fi
 		else
-			echored "Error: The gaia-l10n/$locale_code repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneHg gaia-l10n clone the repository."
-			echoyellow "Then ./mozilla.sh getGaia to copy the l10n files into OmegaT."
-			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh returnGaia again."
+			echored "Error: Unable to read from $url"
+			echored "Seems that the $reponame repository does not exist."
 		fi
 }
 
-function clone_hg_channel(){
-	# $1: (project)repository name
-	local reponame="$1"
-	local repo_path="."
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
+function update_hg_l10n(){
+	mode="https:/"
+	local reponame="l10n/gecko-strings"
+
+	cd $root_path
+
+	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			reponame="releases/$reponame"
-			repo_path="releases"
+			echogreen "Updating the $reponame repository."
+			cd $hg_path/$reponame
+			hg pull -u
+			cd $root_path
+			echogreen "Updated the $reponame repository."
+		else
+			echored "Error: The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneL10n to clone the $reponame repository."
 		fi
+}
+
+
+function clone_hg_channel(){
+	local reponame="comm-central"
+
+	cd $root_path
 
 	local url="https://$mozilla_url/$reponame"
 
@@ -408,45 +401,40 @@ function clone_hg_channel(){
 		then
 			if [ -d ./$hg_path/$reponame/.hg ]
 				then
-					echoyellow "The $1 repository already exist."
-					echoyellow "Try ./mozilla.sh updateChannel $1 to update the repository."
+					echoyellow "The $reponame repository already exist."
+					echoyellow "Try ./mozilla.sh updateChannel to update the $reponame repository."
 				else
-					echogreen "Cloning the $1 repository."
-					mkdir -p $hg_path/$repo_path
-					cd $hg_path/$repo_path
+					echogreen "Cloning the $reponame repository."
+					cd $hg_path
 					hg clone $url
-					cd $1
+					cd $reponame
 					python client.py checkout
 					cd $root_path
-					echogreen "Cloned the $1 repository."
+					echogreen "Cloned the $reponame repository."
 
 				fi
 		else
 			echored "Error: Unable to read from $url"
-			echored "Seems that the $1 repository does not exist."
+			echored "Seems that the $reponame repository does not exist."
 		fi
 
 }
 
 function update_hg_channel(){
-	# $1: (project)repository name
-	local reponame="$1"
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			echogreen "Updating the $1 repository."
+			echogreen "Updating the $reponame repository."
 			cd ./$hg_path/$reponame
 			python client.py checkout
 			cd $root_path
-			echogreen "Updated the $1 repository."
+			echogreen "Updated the $reponame repository."
 		else
 			echored "Error: The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel $reponame to clone the repository."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
@@ -457,697 +445,563 @@ function update_hg_channel(){
 
 #############################################################################################
 function get_files_browser(){
-	# $1: (project)repository name
-	local reponame="$1"
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			echogreen "Copying l10n files for the $1 repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/$reponame/browser
-			cp -r ./$hg_path/$reponame/mozilla/browser/${Ruta_Locales}/* ./$omt_path/source/$reponame/browser
-			mkdir -p ./$omt_path/source/$reponame/devtools/client
-			mkdir -p ./$omt_path/source/$reponame/devtools/shared
-			cp -r ./$hg_path/$reponame/mozilla/devtools/client/${Ruta_Locales}/* ./$omt_path/source/$reponame/devtools/client
-			cp -r ./$hg_path/$reponame/mozilla/devtools/shared/${Ruta_Locales}/* ./$omt_path/source/$reponame/devtools/shared
-			mkdir -p ./$omt_path/source/$reponame/browser/branding/official
-			cp -r ./$hg_path/$reponame/mozilla/browser/branding/official/${Ruta_Locales}/* ./$omt_path/source/$reponame/browser/branding/official
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/browser
+			cp -r ./$hg_path/$reponame/mozilla/browser/${Ruta_Locales}/* ./$omt_path/source/browser
+			mkdir -p ./$omt_path/source/browser/extensions/formautofill
+			cp -r ./$hg_path/$reponame/mozilla/browser/extensions/formautofill/${Ruta_Locales}/* ./$omt_path/source/browser/extensions/formautofill
+			mkdir -p ./$omt_path/source/browser/extensions/onboarding
+			cp -r ./$hg_path/$reponame/mozilla/browser/extensions/onboarding/${Ruta_Locales}/* ./$omt_path/source/browser/extensions/onboarding
+			mkdir -p ./$omt_path/source/browser/extensions/webcompat-reporter
+			cp -r ./$hg_path/$reponame/mozilla/browser/extensions/webcompat-reporter/${Ruta_Locales}/* ./$omt_path/source/browser/extensions/webcompat-reporter
+			mkdir -p ./$omt_path/source/devtools/client
+			mkdir -p ./$omt_path/source/devtools/shared
+			mkdir -p ./$omt_path/source/devtools/shim
+			cp -r ./$hg_path/$reponame/mozilla/devtools/client/${Ruta_Locales}/* ./$omt_path/source/devtools/client
+			cp -r ./$hg_path/$reponame/mozilla/devtools/shared/${Ruta_Locales}/* ./$omt_path/source/devtools/shared
+			cp -r ./$hg_path/$reponame/mozilla/devtools/shim/${Ruta_Locales}/* ./$omt_path/source/devtools/shim
+			mkdir -p ./$omt_path/source/browser/branding/official
+			cp -r ./$hg_path/$reponame/mozilla/browser/branding/official/${Ruta_Locales}/* ./$omt_path/source/browser/branding/official
 			# Files to exclude of OmegaT
 			# Bug 1276740 - Centralize all search plugins into mozilla-central
 			# rm -r ./$omt_path/source/$reponame/browser/searchplugins
-			rm -r ./$omt_path/source/$reponame/browser/chrome/browser-region
-			rm -r ./$omt_path/source/$reponame/browser/defines.inc
-			rm -r ./$omt_path/source/$reponame/browser/firefox-l10n.js
+			rm -r ./$omt_path/source/browser/chrome/browser-region
+			rm -r ./$omt_path/source/browser/defines.inc
+			rm -r ./$omt_path/source/browser/firefox-l10n.js
 			# To delete o bookmarks.inc file
-			rm -r ./$omt_path/source/$reponame/browser/profile
+			rm -r ./$omt_path/source/browser/profile
 			echogreen "Copied l10n files into OmegaT."
 		else
-			echoyellow "The $1 repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel $1 to clone the repository."
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
 function move_files_browser(){
-	# $1: (project)repository name
-	local reponame="$1"
-	local path="."
-	local target_path="."
+	local reponame="l10n-central"
 
-	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
-		then
-			target_path="releases/l10n"
-			path="releases"
-			reponame="mozilla-$reponame"
-		else
-			reponame="l10n-$reponame"
-		fi
+	cd $root_path
 
-	if [ -d ./$hg_path/$target_path/$reponame/$locale_code/.hg ]
+
+	if [ -d ./$hg_path/$reponame/$locale_code/.hg ]
 		then
-			if [ -d ./$omt_path/target/$path/comm-$1/browser ]
+			if [ -d ./$omt_path/target/browser ]
 				then
 					echogreen "Updating the translations of $reponame/$locale_code repository."
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/browser/branding
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/browser/crashreporter
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/browser/installer
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/browser/pdfviewer
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/browser/updater
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/browser/chrome/browser
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/browser/chrome/overrides
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/devtools
-					cp -r ./$omt_path/target/$path/comm-$1/browser/* ./$hg_path/$target_path/$reponame/$locale_code/browser/
-					cp -r ./$omt_path/target/$path/comm-$1/devtools ./$hg_path/$target_path/$reponame/$locale_code/
+					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/branding
+					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/crashreporter
+					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/installer
+					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/pdfviewer
+					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/updater
+					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/chrome/browser
+					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/chrome/overrides
+					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/extensions
+					if_exist_delete ./$hg_path/$reponame/$locale_code/devtools
+					cp -r ./$omt_path/target/browser/* ./$hg_path/$reponame/$locale_code/browser/
+					cp -r ./$omt_path/target/devtools ./$hg_path/$reponame/$locale_code/
 					echogreen "Updated the translations of repository."
 				else
 					echored "Error: There is no translations. Do not exist the project into target folder."
 					echoyellow "Create the translated files with OmegaT and if the project does not exist into source folder:"
-					echoyellow "Execute ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
+					echoyellow "Execute ./mozilla.sh getBrowser to copy the l10n files into OmegaT."
 				fi
 		else
 			echored "Error: The $reponame/$locale_code repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneHg $reponame clone the repository."
-			echoyellow "Then ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
-			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveBrowser $1 again."
+			echoyellow "Try ./mozilla.sh cloneHg clone the $reponame repository."
+			echoyellow "Then ./mozilla.sh getBrowser to copy the l10n files into OmegaT."
+			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveBrowser again."
 		fi
 }
 
 function get_files_toolkit(){
-	# $1: (project)repository name
-	local reponame="$1"
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			echogreen "Copying l10n files for the $1 repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/$reponame/toolkit
-			cp -r ./$hg_path/$reponame/mozilla/toolkit/${Ruta_Locales}/* ./$omt_path/source/$reponame/toolkit
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/toolkit
+			cp -r ./$hg_path/$reponame/mozilla/toolkit/${Ruta_Locales}/* ./$omt_path/source/toolkit
 
 			# Files to exclude of OmegaT
-			rm -r ./$omt_path/source/$reponame/toolkit/defines.inc
+			rm -r ./$omt_path/source/toolkit/defines.inc
 			echogreen "Copied l10n files into OmegaT."
 		else
-			echoyellow "The $1 repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel $1 to clone the repository."
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
 function move_files_toolkit(){
-	# $1: (project)repository name
-	local reponame="$1"
-	local path="."
-	local target_path="."
+	local reponame="l10n-central"
 
-	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
-		then
-			target_path="releases/l10n"
-			path="releases"
-			reponame="mozilla-$reponame"
-		else
-			reponame="l10n-$reponame"
-		fi
+	cd $root_path
 
-	if [ -d ./$hg_path/$target_path/$reponame/$locale_code/.hg ]
+	if [ -d ./$hg_path/$reponame/$locale_code/.hg ]
 		then
-			if [ -d ./$omt_path/target/$path/comm-$1/toolkit ]
+			if [ -d ./$omt_path/target/toolkit ]
 				then
 					echogreen "Updating the translations of $reponame/$locale_code repository."
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/toolkit/chrome
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/toolkit/crashreporter
-					cp -r ./$omt_path/target/$path/comm-$1/toolkit/* ./$hg_path/$target_path/$reponame/$locale_code/toolkit/
+					if_exist_delete ./$hg_path/$reponame/$locale_code/toolkit/chrome
+					if_exist_delete ./$hg_path/$reponame/$locale_code/toolkit/crashreporter
+					cp -r ./$omt_path/target/toolkit/* ./$hg_path/$reponame/$locale_code/toolkit/
 					echogreen "Updated the translations of repository."
 				else
 					echored "Error: There is no translations. Do not exist the project into target folder."
 					echoyellow "Create the translated files with OmegaT and if the project does not exist into source folder:"
-					echoyellow "Execute ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
+					echoyellow "Execute ./mozilla.sh getBrowser to copy the l10n files into OmegaT."
 				fi
 		else
 			echored "Error: The $reponame/$locale_code repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneHg $reponame clone the repository."
-			echoyellow "Then ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
-			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveBrowser $1 again."
+			echoyellow "Try ./mozilla.sh cloneHg clone the $reponame repository."
+			echoyellow "Then ./mozilla.sh getBrowser to copy the l10n files into OmegaT."
+			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveBrowser again."
 		fi
 }
 
 function get_files_mobile(){
-	# $1: (project)repository name
-	local reponame="$1"
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			echogreen "Copying l10n files for the $1 repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/$reponame/mobile
-			cp -r ./$hg_path/$reponame/mozilla/mobile/${Ruta_Locales}/* ./$omt_path/source/$reponame/mobile
-			mkdir -p ./$omt_path/source/$reponame/mobile/android
-			cp -r ./$hg_path/$reponame/mozilla/mobile/android/${Ruta_Locales}/* ./$omt_path/source/$reponame/mobile/android
-			mkdir -p ./$omt_path/source/$reponame/mobile/android/base
-			cp -r ./$hg_path/$reponame/mozilla/mobile/android/base/${Ruta_Locales}/* ./$omt_path/source/$reponame/mobile/android/base
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/mobile
+			cp -r ./$hg_path/$reponame/mozilla/mobile/${Ruta_Locales}/* ./$omt_path/source/mobile
+			mkdir -p ./$omt_path/source/mobile/android
+			cp -r ./$hg_path/$reponame/mozilla/mobile/android/${Ruta_Locales}/* ./$omt_path/source/mobile/android
+			mkdir -p ./$omt_path/source/mobile/android/base
+			cp -r ./$hg_path/$reponame/mozilla/mobile/android/base/${Ruta_Locales}/* ./$omt_path/source/mobile/android/base
 			# Files to exclude of OmegaT
-			rm -r ./$omt_path/source/$reponame/mobile/searchplugins
-			rm -r ./$omt_path/source/$reponame/mobile/chrome
-			rm -r ./$omt_path/source/$reponame/mobile/android/defines.inc
-			rm -r ./$omt_path/source/$reponame/mobile/android/mobile-l10n.js
+			rm -r ./$omt_path/source/mobile/chrome
+			rm -r ./$omt_path/source/mobile/android/defines.inc
+			rm -r ./$omt_path/source/mobile/android/mobile-l10n.js
 			echogreen "Copied l10n files into OmegaT."
 		else
-			echoyellow "The $1 repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel $1 to clone the repository."
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
 function move_files_mobile(){
-	# $1: (project)repository name
-	local reponame="$1"
-	local path="."
-	local target_path="."
+	local reponame="l10n-central"
 
-	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
-		then
-			target_path="releases/l10n"
-			path="releases"
-			reponame="mozilla-$reponame"
-		else
-			reponame="l10n-$reponame"
-		fi
+	cd $root_path
 
-	if [ -d ./$hg_path/$target_path/$reponame/$locale_code/.hg ]
+	if [ -d ./$hg_path/$reponame/$locale_code/.hg ]
 		then
-			if [ -d ./$omt_path/target/$path/comm-$1/mobile ]
+			if [ -d ./$omt_path/target/mobile ]
 				then
 					echogreen "Updating the translations of $reponame/$locale_code repository."
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/mobile/android/base
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/mobile/android/chrome
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/mobile/overrides
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/mobile/xul
-					cp -r ./$omt_path/target/$path/comm-$1/mobile/* ./$hg_path/$target_path/$reponame/$locale_code/mobile/
+					if_exist_delete ./$hg_path/$reponame/$locale_code/mobile/android/base
+					if_exist_delete ./$hg_path/$reponame/$locale_code/mobile/android/chrome
+					if_exist_delete ./$hg_path/$reponame/$locale_code/mobile/overrides
+					if_exist_delete ./$hg_path/$reponame/$locale_code/mobile/xul
+					cp -r ./$omt_path/target/mobile/* ./$hg_path/$reponame/$locale_code/mobile/
 					echogreen "Updated the translations of repository."
 				else
 					echored "Error: There is no translations. Do not exist the project into target folder."
 					echoyellow "Create the translated files with OmegaT and if the project does not exist into source folder:"
-					echoyellow "Execute ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
+					echoyellow "Execute ./mozilla.sh getFennec to copy the l10n files into OmegaT."
 				fi
 		else
 			echored "Error: The $reponame/$locale_code repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneHg $reponame clone the repository."
-			echoyellow "Then ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
-			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveBrowser $1 again."
+			echoyellow "Try ./mozilla.sh cloneHg clone the $reponame repository."
+			echoyellow "Then ./mozilla.sh getFennec to copy the l10n files into OmegaT."
+			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveFennec again."
 		fi
 }
 
 function get_files_editor(){
-	# $1: (project)repository name
-	local reponame="$1"
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			echogreen "Copying l10n files for the $1 repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/$reponame/editor
-			mkdir -p ./$omt_path/source/$reponame/editor/ui
-			cp -r ./$hg_path/$reponame/editor/ui/${Ruta_Locales}/* ./$omt_path/source/$reponame/editor/ui
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/editor
+			mkdir -p ./$omt_path/source/editor/ui
+			cp -r ./$hg_path/$reponame/editor/ui/${Ruta_Locales}/* ./$omt_path/source/editor/ui
 			# Files to exclude of OmegaT
-			rm -r ./$omt_path/source/$reponame/editor/ui/chrome/region
+			rm -r ./$omt_path/source/editor/ui/chrome/region
 			echogreen "Copied l10n files into OmegaT."
 		else
-			echoyellow "The $1 repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel $1 to clone the repository."
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
 function move_files_editor(){
-	# $1: (project)repository name
-	local reponame="$1"
-	local path="."
-	local target_path="."
+	local reponame="l10n-central"
 
-	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
-		then
-			target_path="releases/l10n"
-			path="releases"
-			reponame="mozilla-$reponame"
-		else
-			reponame="l10n-$reponame"
-		fi
+	cd $root_path
 
-	if [ -d ./$hg_path/$target_path/$reponame/$locale_code/.hg ]
+	if [ -d ./$hg_path/$reponame/$locale_code/.hg ]
 		then
-			if [ -d ./$omt_path/target/$path/comm-$1/editor ]
+			if [ -d ./$omt_path/target/editor ]
 				then
 					echogreen "Updating the translations of $reponame/$locale_code repository."
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/editor/ui/chrome/composer
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/editor/ui/chrome/dialogs
-					cp -r ./$omt_path/target/$path/comm-$1/editor/* ./$hg_path/$target_path/$reponame/$locale_code/editor/
+					if_exist_delete ./$hg_path/$reponame/$locale_code/editor/ui/chrome/composer
+					if_exist_delete ./$hg_path/$reponame/$locale_code/editor/ui/chrome/dialogs
+					cp -r ./$omt_path/target/editor/* ./$hg_path/$reponame/$locale_code/editor/
 					echogreen "Updated the translations of repository."
 				else
 					echored "Error: There is no translations. Do not exist the project into target folder."
 					echoyellow "Create the translated files with OmegaT and if the project does not exist into source folder:"
-					echoyellow "Execute ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
+					echoyellow "Execute ./mozilla.sh getThunderbird to copy the l10n files into OmegaT."
 				fi
 		else
 			echored "Error: The $reponame/$locale_code repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneHg $reponame clone the repository."
-			echoyellow "Then ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
-			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveBrowser $1 again."
+			echoyellow "Try ./mozilla.sh cloneHg clone the $reponame repository."
+			echoyellow "Then ./mozilla.sh getThunderbird to copy the l10n files into OmegaT."
+			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveThunderbird again."
 		fi
 }
 
 function get_files_mail(){
-	# $1: (project)repository name
-	local reponame="$1"
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			echogreen "Copying l10n files for the $1 repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/$reponame/mail
-			cp -r ./$hg_path/$reponame/mail/${Ruta_Locales}/* ./$omt_path/source/$reponame/mail
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/mail
+			cp -r ./$hg_path/$reponame/mail/${Ruta_Locales}/* ./$omt_path/source/mail
 
 			# Files to exclude of OmegaT
-			rm -r ./$omt_path/source/$reponame/mail/searchplugins
-			rm -r ./$omt_path/source/$reponame/mail/chrome/messenger-region
-			rm -r ./$omt_path/source/$reponame/mail/defines.inc
-			rm -r ./$omt_path/source/$reponame/mail/all-l10n.js
+			rm -r ./$omt_path/source/mail/searchplugins
+			rm -r ./$omt_path/source/mail/chrome/messenger-region
+			rm -r ./$omt_path/source/mail/defines.inc
+			rm -r ./$omt_path/source/mail/all-l10n.js
 			echogreen "Copied l10n files into OmegaT."
 		else
-			echoyellow "The $1 repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel $1 to clone the repository."
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
 function move_files_mail(){
-	# $1: (project)repository name
-	local reponame="$1"
-	local path="."
-	local target_path="."
+	local reponame="l10n-central"
 
-	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
-		then
-			target_path="releases/l10n"
-			path="releases"
-			reponame="mozilla-$reponame"
-		else
-			reponame="l10n-$reponame"
-		fi
+	cd $root_path
 
-	if [ -d ./$hg_path/$target_path/$reponame/$locale_code/.hg ]
+	if [ -d ./$hg_path/$reponame/$locale_code/.hg ]
 		then
-			if [ -d ./$omt_path/target/$path/comm-$1/mail ]
+			if [ -d ./$omt_path/target/mail ]
 				then
 					echogreen "Updating the translations of $reponame/$locale_code repository."
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/mail/feedback
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/mail/installer
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/mail/updater
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/mail/communicator
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/mail/messenger
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/mail/messenger-mapi
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/mail/messenger-newsblog
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/mail/messenger-smime
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/mail/mozldap
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/mail/overrides
-					cp -r ./$omt_path/target/$path/comm-$1/mail/* ./$hg_path/$target_path/$reponame/$locale_code/mail/
+					if_exist_delete ./$hg_path/$reponame/$locale_code/mail/feedback
+					if_exist_delete ./$hg_path/$reponame/$locale_code/mail/installer
+					if_exist_delete ./$hg_path/$reponame/$locale_code/mail/updater
+					if_exist_delete ./$hg_path/$reponame/$locale_code/mail/communicator
+					if_exist_delete ./$hg_path/$reponame/$locale_code/mail/messenger
+					if_exist_delete ./$hg_path/$reponame/$locale_code/mail/messenger-mapi
+					if_exist_delete ./$hg_path/$reponame/$locale_code/mail/messenger-newsblog
+					if_exist_delete ./$hg_path/$reponame/$locale_code/mail/messenger-smime
+					if_exist_delete ./$hg_path/$reponame/$locale_code/mail/mozldap
+					if_exist_delete ./$hg_path/$reponame/$locale_code/mail/overrides
+					cp -r ./$omt_path/target/mail/* ./$hg_path/$reponame/$locale_code/mail/
 					echogreen "Updated the translations of repository."
 				else
 					echored "Error: There is no translations. Do not exist the project into target folder."
 					echoyellow "Create the translated files with OmegaT and if the project does not exist into source folder:"
-					echoyellow "Execute ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
+					echoyellow "Execute ./mozilla.sh getThunderbird to copy the l10n files into OmegaT."
 				fi
 		else
 			echored "Error: The $reponame/$locale_code repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneHg $reponame clone the repository."
-			echoyellow "Then ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
-			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveBrowser $1 again."
+			echoyellow "Try ./mozilla.sh cloneHg clone the $reponame repository."
+			echoyellow "Then ./mozilla.sh getThunderbird to copy the l10n files into OmegaT."
+			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveThunderbird again."
 		fi
 }
 
 function get_files_calendar(){
-	# $1: (project)repository name
-	local reponame="$1"
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			echogreen "Copying l10n files for the $1 repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/$reponame/calendar
-			cp -r ./$hg_path/$reponame/calendar/${Ruta_Locales}/* ./$omt_path/source/$reponame/calendar
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/calendar
+			cp -r ./$hg_path/$reponame/calendar/${Ruta_Locales}/* ./$omt_path/source/calendar
 
 			# Files to exclude of OmegaT
-			rm -r ./$omt_path/source/$reponame/calendar/lightning-l10n.js
-			rm -r ./$omt_path/source/$reponame/calendar/README.txt
+			rm -r ./$omt_path/source/calendar/lightning-l10n.js
+			rm -r ./$omt_path/source/calendar/README.txt
 			echogreen "Copied l10n files into OmegaT."
 		else
-			echoyellow "The $1 repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel $1 to clone the repository."
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
 function move_files_calendar(){
-	# $1: (project)repository name
-	local reponame="$1"
-	local path="."
-	local target_path="."
+	local reponame="l10n-central"
 
-	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
-		then
-			target_path="releases/l10n"
-			path="releases"
-			reponame="mozilla-$reponame"
-		else
-			reponame="l10n-$reponame"
-		fi
+	cd $root_path
 
-	if [ -d ./$hg_path/$target_path/$reponame/$locale_code/.hg ]
+	if [ -d ./$hg_path/$reponame/$locale_code/.hg ]
 		then
-			if [ -d ./$omt_path/target/$path/comm-$1/calendar ]
+			if [ -d ./$omt_path/target/calendar ]
 				then
 					echogreen "Updating the translations of $reponame/$locale_code repository."
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/calendar/chrome
-					cp -r ./$omt_path/target/$path/comm-$1/calendar/* ./$hg_path/$target_path/$reponame/$locale_code/calendar/
+					if_exist_delete ./$hg_path/$reponame/$locale_code/calendar/chrome
+					cp -r ./$omt_path/target/calendar/* ./$hg_path/$reponame/$locale_code/calendar/
 					echogreen "Updated the translations of repository."
 				else
 					echored "Error: There is no translations. Do not exist the project into target folder."
 					echoyellow "Create the translated files with OmegaT and if the project does not exist into source folder:"
-					echoyellow "Execute ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
+					echoyellow "Execute ./mozilla.sh getThunderbird to copy the l10n files into OmegaT."
 				fi
 		else
 			echored "Error: The $reponame/$locale_code repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneHg $reponame clone the repository."
-			echoyellow "Then ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
-			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveBrowser $1 again."
+			echoyellow "Try ./mozilla.sh cloneHg clone the $reponame repository."
+			echoyellow "Then ./mozilla.sh getThunderbird to copy the l10n files into OmegaT."
+			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveThunderbird again."
 		fi
 }
 
 function get_files_chat(){
-	# $1: (project)repository name
-	local reponame="$1"
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			echogreen "Copying l10n files for the $1 repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/$reponame/chat
-			cp -r ./$hg_path/$reponame/chat/${Ruta_Locales}/* ./$omt_path/source/$reponame/chat
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/chat
+			cp -r ./$hg_path/$reponame/chat/${Ruta_Locales}/* ./$omt_path/source/chat
 			echogreen "Copied l10n files into OmegaT."
 		else
-			echoyellow "The $1 repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel $1 to clone the repository."
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
 function move_files_chat(){
-	# $1: (project)repository name
-	local reponame="$1"
-	local path="."
-	local target_path="."
+	local reponame="l10n-central"
 
-	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
-		then
-			target_path="releases/l10n"
-			path="releases"
-			reponame="mozilla-$reponame"
-		else
-			reponame="l10n-$reponame"
-		fi
+	cd $root_path
 
-	if [ -d ./$hg_path/$target_path/$reponame/$locale_code/.hg ]
+	if [ -d ./$hg_path/$reponame/$locale_code/.hg ]
 		then
-			if [ -d ./$omt_path/target/$path/comm-$1/chat ]
+			if [ -d ./$omt_path/target/chat ]
 				then
 					echogreen "Updating the translations of $reponame/$locale_code repository."
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/chat
-					cp -r ./$omt_path/target/$path/comm-$1/chat ./$hg_path/$target_path/$reponame/$locale_code/
+					if_exist_delete ./$hg_path/$reponame/$locale_code/chat
+					cp -r ./$omt_path/target/chat ./$hg_path/$reponame/$locale_code/
 					echogreen "Updated the translations of repository."
 				else
 					echored "Error: There is no translations. Do not exist the project into target folder."
 					echoyellow "Create the translated files with OmegaT and if the project does not exist into source folder:"
-					echoyellow "Execute ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
+					echoyellow "Execute ./mozilla.sh getThunderbird to copy the l10n files into OmegaT."
 				fi
 		else
 			echored "Error: The $reponame/$locale_code repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneHg $reponame clone the repository."
-			echoyellow "Then ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
-			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveBrowser $1 again."
+			echoyellow "Try ./mozilla.sh cloneHg clone the $reponame repository."
+			echoyellow "Then ./mozilla.sh getThunderbird to copy the l10n files into OmegaT."
+			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveThunderbird again."
 		fi
 }
 
 function get_files_dom(){
-	# $1: (project)repository name
-	local reponame="$1"
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			echogreen "Copying l10n files for the $1 repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/$reponame/dom
-			cp -r ./$hg_path/$reponame/mozilla/dom/${Ruta_Locales}/* ./$omt_path/source/$reponame/dom
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/dom
+			cp -r ./$hg_path/$reponame/mozilla/dom/${Ruta_Locales}/* ./$omt_path/source/dom
 			echogreen "Copied l10n files into OmegaT."
 		else
-			echoyellow "The $1 repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel $1 to clone the repository."
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
 function get_files_netwerk(){
-	# $1: (project)repository name
-	local reponame="$1"
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			echogreen "Copying l10n files for the $1 repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/$reponame/netwerk
-			cp -r ./$hg_path/$reponame/mozilla/netwerk/${Ruta_Locales}/* ./$omt_path/source/$reponame/netwerk
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/netwerk
+			cp -r ./$hg_path/$reponame/mozilla/netwerk/${Ruta_Locales}/* ./$omt_path/source/netwerk
 			echogreen "Copied l10n files into OmegaT."
 		else
-			echoyellow "The $1 repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel $1 to clone the repository."
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
 function get_files_otherlicenses(){
-	# $1: (project)repository name
-	local reponame="$1"
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			echogreen "Copying l10n files for the $1 repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/$reponame/other-licenses/branding/thunderbird
-			cp -r ./$hg_path/$reponame/other-licenses/branding/thunderbird/${Ruta_Locales}/* ./$omt_path/source/$reponame/other-licenses/branding/thunderbird
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/other-licenses/branding/thunderbird
+			cp -r ./$hg_path/$reponame/other-licenses/branding/thunderbird/${Ruta_Locales}/* ./$omt_path/source/other-licenses/branding/thunderbird
 			echogreen "Copied l10n files into OmegaT."
 		else
-			echoyellow "The $1 repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel $1 to clone the repository."
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
 function get_files_security(){
-	# $1: (project)repository name
-	local reponame="$1"
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			echogreen "Copying l10n files for the $1 repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/$reponame/security
-			mkdir -p ./$omt_path/source/$reponame/security/manager
-			cp -r ./$hg_path/$reponame/mozilla/security/manager/${Ruta_Locales}/* ./$omt_path/source/$reponame/security/manager
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/security
+			mkdir -p ./$omt_path/source/security/manager
+			cp -r ./$hg_path/$reponame/mozilla/security/manager/${Ruta_Locales}/* ./$omt_path/source/security/manager
 			echogreen "Copied l10n files into OmegaT."
 		else
-			echoyellow "The $1 repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel $1 to clone the repository."
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
 function get_files_services(){
-	# $1: (project)repository name
-	local reponame="$1"
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			echogreen "Copying l10n files for the $1 repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/$reponame/services
-			mkdir -p ./$omt_path/source/$reponame/services/sync
-			cp -r ./$hg_path/$reponame/mozilla/services/sync/${Ruta_Locales}/* ./$omt_path/source/$reponame/services/sync
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/services
+			mkdir -p ./$omt_path/source/services/sync
+			cp -r ./$hg_path/$reponame/mozilla/services/sync/${Ruta_Locales}/* ./$omt_path/source/services/sync
 			echogreen "Copied l10n files into OmegaT."
 		else
-			echoyellow "The $1 repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel $1 to clone the repository."
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
 function move_files_rest(){
-	# $1: (project)repository name
-	local reponame="$1"
-	local path="."
-	local target_path="."
+	local reponame="l10n-central"
 
-	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
-		then
-			target_path="releases/l10n"
-			path="releases"
-			reponame="mozilla-$reponame"
-		else
-			reponame="l10n-$reponame"
-		fi
+	cd $root_path
 
-	if [ -d ./$hg_path/$target_path/$reponame/$locale_code/.hg ]
+	if [ -d ./$hg_path/$reponame/$locale_code/.hg ]
 		then
-			if [ -d ./$omt_path/target/$path/comm-$1 ]
+			if [ -d ./$omt_path/target ]
 				then
 					echogreen "Updating the translations of $reponame/$locale_code repository."
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/dom
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/netwerk
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/other-licenses
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/security
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/services
+					if_exist_delete ./$hg_path/$reponame/$locale_code/dom
+					if_exist_delete ./$hg_path/$reponame/$locale_code/netwerk
+					if_exist_delete ./$hg_path/$reponame/$locale_code/other-licenses
+					if_exist_delete ./$hg_path/$reponame/$locale_code/security
+					if_exist_delete ./$hg_path/$reponame/$locale_code/services
 
-					cp -r ./$omt_path/target/$path/comm-$1/dom ./$hg_path/$target_path/$reponame/$locale_code/
-					cp -r ./$omt_path/target/$path/comm-$1/netwerk ./$hg_path/$target_path/$reponame/$locale_code/
-					cp -r ./$omt_path/target/$path/comm-$1/other-licenses ./$hg_path/$target_path/$reponame/$locale_code/
-					cp -r ./$omt_path/target/$path/comm-$1/security ./$hg_path/$target_path/$reponame/$locale_code/
-					cp -r ./$omt_path/target/$path/comm-$1/services ./$hg_path/$target_path/$reponame/$locale_code/
+					cp -r ./$omt_path/target/dom ./$hg_path/$reponame/$locale_code/
+					cp -r ./$omt_path/target/netwerk ./$hg_path/$reponame/$locale_code/
+					cp -r ./$omt_path/target/other-licenses ./$hg_path/$reponame/$locale_code/
+					cp -r ./$omt_path/target/security ./$hg_path/$reponame/$locale_code/
+					cp -r ./$omt_path/target/services ./$hg_path/$reponame/$locale_code/
 					echogreen "Updated the translations of repository."
 				else
 					echored "Error: There is no translations. Do not exist the project into target folder."
 					echoyellow "Create the translated files with OmegaT and if the project does not exist into source folder:"
-					echoyellow "Execute ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
+					echoyellow "Execute ./mozilla.sh getFirefox to copy the l10n files into OmegaT."
 				fi
 		else
 			echored "Error: The $reponame/$locale_code repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneHg $reponame clone the repository."
-			echoyellow "Then ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
-			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveBrowser $1 again."
+			echoyellow "Try ./mozilla.sh cloneHg clone the $reponame repository."
+			echoyellow "Then ./mozilla.sh getFirefox to copy the l10n files into OmegaT."
+			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveFirefox again."
 		fi
 }
 
 function get_files_suite(){
-	# $1: (project)repository name
-	local reponame="$1"
+	local reponame="comm-central"
 
-	if [ $reponame == "comm-aurora" ] || [ $reponame == "comm-beta" ]
-		then
-			reponame="releases/$reponame"
-		fi
+	cd $root_path
 
 	if [ -d ./$hg_path/$reponame/.hg ]
 		then
-			echogreen "Copying l10n files for the $1 repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/$reponame/suite
-			cp -r ./$hg_path/$reponame/suite/${Ruta_Locales}/* ./$omt_path/source/$reponame/suite
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/suite
+			cp -r ./$hg_path/$reponame/suite/${Ruta_Locales}/* ./$omt_path/source/suite
 
 			# Files to exclude of OmegaT
-			rm -r ./$omt_path/source/$reponame/suite/searchplugins
-			rm -r ./$omt_path/source/$reponame/suite/suite-l10n.js
-			rm -r ./$omt_path/source/$reponame/suite/defines.inc
-			rm -r ./$omt_path/source/$reponame/suite/extra-jar.mn
-			rm -r ./$omt_path/source/$reponame/suite/profile
-			rm -r ./$omt_path/source/$reponame/suite/chrome/browser/region.properties
-			rm -r ./$omt_path/source/$reponame/suite/chrome/common/region.properties
-			rm -r ./$omt_path/source/$reponame/suite/chrome/mailnews/region.properties
-			rm -r ./$omt_path/source/$reponame/suite/chrome/common/help
+			rm -r ./$omt_path/source/suite/searchplugins
+			rm -r ./$omt_path/source/suite/suite-l10n.js
+			rm -r ./$omt_path/source/suite/defines.inc
+			rm -r ./$omt_path/source/suite/profile
+			rm -r ./$omt_path/source/suite/chrome/browser/region.properties
+			rm -r ./$omt_path/source/suite/chrome/common/region.properties
+			rm -r ./$omt_path/source/suite/chrome/mailnews/region.properties
+			rm -r ./$omt_path/source/suite/chrome/common/help
 			echogreen "Copied l10n files into OmegaT."
 		else
-			echoyellow "The $1 repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel $1 to clone the repository."
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
 function move_files_suite(){
-	# $1: (project)repository name
-	local reponame="$1"
-	local path="."
-	local target_path="."
+	local reponame="l10n-central"
 
-	if [ $reponame == "aurora" ] || [ $reponame == "beta" ]
-		then
-			target_path="releases/l10n"
-			path="releases"
-			reponame="mozilla-$reponame"
-		else
-			reponame="l10n-$reponame"
-		fi
+	cd $root_path
 
-	if [ -d ./$hg_path/$target_path/$reponame/$locale_code/.hg ]
+	if [ -d ./$hg_path/$reponame/$locale_code/.hg ]
 		then
-			if [ -d ./$omt_path/target/$path/comm-$1/suite ]
+			if [ -d ./$omt_path/target/suite ]
 				then
 					echogreen "Updating the translations of $reponame/$locale_code repository."
 
-					mv ./$hg_path/$target_path/$reponame/$locale_code/suite/chrome/browser/region.properties ./$hg_path/$target_path/$reponame/$locale_code/regionbrowser.properties
-					mv ./$hg_path/$target_path/$reponame/$locale_code/suite/chrome/common/region.properties ./$hg_path/$target_path/$reponame/$locale_code/regioncommon.properties
-					mv ./$hg_path/$target_path/$reponame/$locale_code/suite/chrome/mailnews/region.properties ./$hg_path/$target_path/$reponame/$locale_code/regionmailnews.properties
-					mv ./$hg_path/$target_path/$reponame/$locale_code/suite/chrome/common/help ./$hg_path/$target_path/$reponame/$locale_code/
+					mv ./$hg_path/$reponame/$locale_code/suite/chrome/browser/region.properties ./$hg_path/$reponame/$locale_code/regionbrowser.properties
+					mv ./$hg_path/$reponame/$locale_code/suite/chrome/common/region.properties ./$hg_path/$reponame/$locale_code/regioncommon.properties
+					mv ./$hg_path/$reponame/$locale_code/suite/chrome/mailnews/region.properties ./$hg_path/$reponame/$locale_code/regionmailnews.properties
+					mv ./$hg_path/$reponame/$locale_code/suite/chrome/common/help ./$hg_path/$reponame/$locale_code/
 
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/suite/crashreporter
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/suite/installer
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/suite/updater
-					if_exist_delete ./$hg_path/$target_path/$reponame/$locale_code/suite/chrome
-					cp -r ./$omt_path/target/$path/comm-$1/suite/* ./$hg_path/$target_path/$reponame/$locale_code/suite/
+					if_exist_delete ./$hg_path/$reponame/$locale_code/suite/crashreporter
+					if_exist_delete ./$hg_path/$reponame/$locale_code/suite/installer
+					if_exist_delete ./$hg_path/$reponame/$locale_code/suite/updater
+					if_exist_delete ./$hg_path/$reponame/$locale_code/suite/chrome
+					cp -r ./$omt_path/target/suite/* ./$hg_path/$reponame/$locale_code/suite/
 
-					mv ./$hg_path/$target_path/$reponame/$locale_code/regionbrowser.properties ./$hg_path/$target_path/$reponame/$locale_code/suite/chrome/browser/region.properties
-					mv ./$hg_path/$target_path/$reponame/$locale_code/regioncommon.properties ./$hg_path/$target_path/$reponame/$locale_code/suite/chrome/common/region.properties
-					mv ./$hg_path/$target_path/$reponame/$locale_code/regionmailnews.properties ./$hg_path/$target_path/$reponame/$locale_code/suite/chrome/mailnews/region.properties
-					mv ./$hg_path/$target_path/$reponame/$locale_code/help ./$hg_path/$target_path/$reponame/$locale_code/suite/chrome/common/
+					mv ./$hg_path/$reponame/$locale_code/regionbrowser.properties ./$hg_path/$reponame/$locale_code/suite/chrome/browser/region.properties
+					mv ./$hg_path/$reponame/$locale_code/regioncommon.properties ./$hg_path/$reponame/$locale_code/suite/chrome/common/region.properties
+					mv ./$hg_path/$reponame/$locale_code/regionmailnews.properties ./$hg_path/$reponame/$locale_code/suite/chrome/mailnews/region.properties
+					mv ./$hg_path/$reponame/$locale_code/help ./$hg_path/$reponame/$locale_code/suite/chrome/common/
 
 					echogreen "Updated the translations of repository."
 				else
 					echored "Error: There is no translations. Do not exist the project into target folder."
 					echoyellow "Create the translated files with OmegaT and if the project does not exist into source folder:"
-					echoyellow "Execute ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
+					echoyellow "Execute ./mozilla.sh getSeaMonkey to copy the l10n files into OmegaT."
 				fi
 		else
 			echored "Error: The $reponame/$locale_code repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneHg $reponame clone the repository."
-			echoyellow "Then ./mozilla.sh getBrowser comm-$1 to copy the l10n files into OmegaT."
-			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveBrowser $1 again."
+			echoyellow "Try ./mozilla.sh cloneHg clone the $reponame repository."
+			echoyellow "Then ./mozilla.sh getSeaMonkey to copy the l10n files into OmegaT."
+			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh moveSeaMonkey again."
 		fi
 }
 #############################################################################################
@@ -1178,26 +1032,22 @@ function simple_help(){
 	echo "			with the 'cloneRepo' task."
 	echo "	returnL10n	Send the translated l10n files from the OmegaT project to the local repository."
 	echo ""
-	echo "	cloneHg		Clone the repository selected in the framework. Only supports hg repositories."
-	echo "			The cloned repositories have only l10n files."
+	echo "	cloneHg		Clone the l10n-central/$locale_code repository in the framework."
+	echo "			The cloned repository has only l10n files."
 	echo "			Example of usage: ./mozilla.sh cloneHg l10n-central"
-	echo "	updateHg	Updates the selected repository in the framework. Updates the cloned repositories"
-	echo "			with the 'cloneHg' task."
+	echo "	updateHg	Update the l10n-central/$locale_code repository in the framework."
+	echo "			Update the cloned repository with the 'cloneHg' task."
 	echo ""
-	echo "	getGaia		Get the l10n files for the Gaia project (repository). Copy the l10n files of Gaia"
-	echo "			into source folder in the OmegaT project. Works with the cloned repositories"
-	echo "			with the 'cloneHg' task."
-	echo "			Example of usage: ./mozilla.sh getGaia"
-	echo "	returnGaia	Send the translated l10n files from the OmegaT project to the local repository."
+	echo "	cloneL10n	Clone the gecko-strings repository in the framework."
+	echo "	updateL10n	Update the gecko-strings repository in the framework."
 	echo ""
-	echo "	cloneChannel	Clone the selected repository in the framework. Only supports hg repositories."
-	echo "			The cloned repositories have source code and l10n files."
-	echo "			Example of usage: ./mozilla.sh cloneChannel comm-central."
-	echo "	updateChannel	Updates the selected repository in the framework. Updates the cloned repositories"
-	echo "			with the 'cloneChannel' task."
-	echo "	getFirefox	Get the l10n files for the Firefox product from the selected repository. Copy the"
+	echo "	cloneChannel	Clone the comm-central repository in the framework."
+	echo "			The cloned repository has source code and l10n files."
+	echo "			Example of usage: ./mozilla.sh cloneChannel."
+	echo "	updateChannel	Updates the comm-central repository in the framework."
+	echo "	getFirefox	Get the l10n files for the Firefox product from the comm-central repository. Copy the"
 	echo "			l10n files into source folder in the OmegaT project."
-	echo "	moveFirefox	Send the translated l10n files from the OmegaT project to the selected local repository."
+	echo "	moveFirefox	Send the translated l10n files from the OmegaT project to the local l10n-central/$locale_code repository."
 	echo "	getFennec	Similar to the 'getFirefox' task but for the Fennec project."
 	echo "	moveFennec	Similar to the 'moveFirefox' task but for the Fennec project."
 	echo "	getThunderbird	Similar to the 'getFirefox' task but for the Thunderbird project."
@@ -1223,20 +1073,20 @@ if [ $# -eq 0 ]
 		[ $param = updateRepo ] && update_repo_mozilla_l10n $2
 		[ $param = getL10n ] && get_l10n $2
 		[ $param = returnL10n ] && return_l10n $2
-		[ $param = cloneHg ] && clone_hg_repos $2 $3
-		[ $param = updateHg ] && update_hg_repos $2 $3
-		[ $param = getGaia ] && get_l10n_Gaia
-		[ $param = returnGaia ] && return_l10n_Gaia
-		[ $param = cloneChannel ] && clone_hg_channel $2
-		[ $param = updateChannel ] && update_hg_channel $2
-		[ $param = getFirefox ] && get_files_browser $2 && get_files_toolkit $2 && get_files_dom $2 && get_files_netwerk $2 && get_files_otherlicenses $2 && get_files_security $2 && get_files_services $2
-		[ $param = moveFirefox ] && move_files_browser $2 && move_files_toolkit $2 && move_files_rest $2
-		[ $param = getFennec ] && get_files_mobile $2
-		[ $param = moveFennec ] && move_files_mobile $2
-		[ $param = getThunderbird ] && get_files_mail $2 && get_files_editor $2 && get_files_chat $2 && get_files_calendar $2
-		[ $param = moveThunderbird ] && move_files_mail $2 && move_files_editor $2 && move_files_chat $2 && move_files_calendar $2
-		[ $param = getSeaMonkey ] && get_files_suite $2
-		[ $param = moveSeaMonkey ] && move_files_suite $2
+		[ $param = cloneHg ] && clone_hg_repo
+		[ $param = updateHg ] && update_hg_repo
+		[ $param = cloneL10n ] && clone_hg_l10n
+		[ $param = updateL10n ] && update_hg_l10n
+		[ $param = cloneChannel ] && clone_hg_channel
+		[ $param = updateChannel ] && update_hg_channel
+		[ $param = getFirefox ] && get_files_browser && get_files_toolkit && get_files_dom && get_files_netwerk && get_files_otherlicenses && get_files_security && get_files_services
+		[ $param = moveFirefox ] && move_files_browser && move_files_toolkit && move_files_rest
+		[ $param = getFennec ] && get_files_mobile
+		[ $param = moveFennec ] && move_files_mobile
+		[ $param = getThunderbird ] && get_files_mail && get_files_editor && get_files_chat && get_files_calendar
+		[ $param = moveThunderbird ] && move_files_mail && move_files_editor && move_files_chat && move_files_calendar
+		[ $param = getSeaMonkey ] && get_files_suite
+		[ $param = moveSeaMonkey ] && move_files_suite
 		[ $param = removeAll ] && remove_target_files
 	fi
 
