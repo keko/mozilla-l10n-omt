@@ -445,7 +445,7 @@ function update_hg_channel(){
 
 #############################################################################################
 function get_files_browser(){
-	local reponame="comm-central"
+	local reponame="l10n/gecko-strings"
 
 	cd $root_path
 
@@ -453,21 +453,10 @@ function get_files_browser(){
 		then
 			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
 			if_exist_delete_create ./$omt_path/source/browser
-			cp -r ./$hg_path/$reponame/mozilla/browser/${Ruta_Locales}/* ./$omt_path/source/browser
-			mkdir -p ./$omt_path/source/browser/extensions/formautofill
-			cp -r ./$hg_path/$reponame/mozilla/browser/extensions/formautofill/${Ruta_Locales}/* ./$omt_path/source/browser/extensions/formautofill
-			mkdir -p ./$omt_path/source/browser/extensions/onboarding
-			cp -r ./$hg_path/$reponame/mozilla/browser/extensions/onboarding/${Ruta_Locales}/* ./$omt_path/source/browser/extensions/onboarding
-			mkdir -p ./$omt_path/source/browser/extensions/webcompat-reporter
-			cp -r ./$hg_path/$reponame/mozilla/browser/extensions/webcompat-reporter/${Ruta_Locales}/* ./$omt_path/source/browser/extensions/webcompat-reporter
-			mkdir -p ./$omt_path/source/devtools/client
-			mkdir -p ./$omt_path/source/devtools/shared
-			mkdir -p ./$omt_path/source/devtools/shim
-			cp -r ./$hg_path/$reponame/mozilla/devtools/client/${Ruta_Locales}/* ./$omt_path/source/devtools/client
-			cp -r ./$hg_path/$reponame/mozilla/devtools/shared/${Ruta_Locales}/* ./$omt_path/source/devtools/shared
-			cp -r ./$hg_path/$reponame/mozilla/devtools/shim/${Ruta_Locales}/* ./$omt_path/source/devtools/shim
-			mkdir -p ./$omt_path/source/browser/branding/official
-			cp -r ./$hg_path/$reponame/mozilla/browser/branding/official/${Ruta_Locales}/* ./$omt_path/source/browser/branding/official
+			cp -r ./$hg_path/$reponame/browser/* ./$omt_path/source/browser
+			mkdir -p ./$omt_path/source/devtools
+			cp -r ./$hg_path/$reponame/devtools/* ./$omt_path/source/devtools
+
 			# Files to exclude of OmegaT
 			# Bug 1276740 - Centralize all search plugins into mozilla-central
 			# rm -r ./$omt_path/source/$reponame/browser/searchplugins
@@ -479,7 +468,7 @@ function get_files_browser(){
 			echogreen "Copied l10n files into OmegaT."
 		else
 			echoyellow "The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
+			echoyellow "Try ./mozilla.sh cloneL10n to clone the $reponame repository."
 		fi
 }
 
@@ -520,7 +509,7 @@ function move_files_browser(){
 }
 
 function get_files_toolkit(){
-	local reponame="comm-central"
+	local reponame="l10n/gecko-strings"
 
 	cd $root_path
 
@@ -528,14 +517,14 @@ function get_files_toolkit(){
 		then
 			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
 			if_exist_delete_create ./$omt_path/source/toolkit
-			cp -r ./$hg_path/$reponame/mozilla/toolkit/${Ruta_Locales}/* ./$omt_path/source/toolkit
+			cp -r ./$hg_path/$reponame/toolkit/* ./$omt_path/source/toolkit
 
 			# Files to exclude of OmegaT
 			rm -r ./$omt_path/source/toolkit/defines.inc
 			echogreen "Copied l10n files into OmegaT."
 		else
 			echoyellow "The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
+			echoyellow "Try ./mozilla.sh cloneL10n to clone the $reponame repository."
 		fi
 }
 
@@ -567,7 +556,7 @@ function move_files_toolkit(){
 }
 
 function get_files_mobile(){
-	local reponame="comm-central"
+	local reponame="l10n/gecko-strings"
 
 	cd $root_path
 
@@ -575,11 +564,7 @@ function get_files_mobile(){
 		then
 			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
 			if_exist_delete_create ./$omt_path/source/mobile
-			cp -r ./$hg_path/$reponame/mozilla/mobile/${Ruta_Locales}/* ./$omt_path/source/mobile
-			mkdir -p ./$omt_path/source/mobile/android
-			cp -r ./$hg_path/$reponame/mozilla/mobile/android/${Ruta_Locales}/* ./$omt_path/source/mobile/android
-			mkdir -p ./$omt_path/source/mobile/android/base
-			cp -r ./$hg_path/$reponame/mozilla/mobile/android/base/${Ruta_Locales}/* ./$omt_path/source/mobile/android/base
+			cp -r ./$hg_path/$reponame/mobile/* ./$omt_path/source/mobile
 			# Files to exclude of OmegaT
 			rm -r ./$omt_path/source/mobile/chrome
 			rm -r ./$omt_path/source/mobile/android/defines.inc
@@ -621,7 +606,7 @@ function move_files_mobile(){
 }
 
 function get_files_editor(){
-	local reponame="comm-central"
+	local reponame="l10n/gecko-strings"
 
 	cd $root_path
 
@@ -629,8 +614,7 @@ function get_files_editor(){
 		then
 			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
 			if_exist_delete_create ./$omt_path/source/editor
-			mkdir -p ./$omt_path/source/editor/ui
-			cp -r ./$hg_path/$reponame/editor/ui/${Ruta_Locales}/* ./$omt_path/source/editor/ui
+			cp -r ./$hg_path/$reponame/editor/* ./$omt_path/source/editor
 			# Files to exclude of OmegaT
 			rm -r ./$omt_path/source/editor/ui/chrome/region
 			echogreen "Copied l10n files into OmegaT."
@@ -668,7 +652,7 @@ function move_files_editor(){
 }
 
 function get_files_mail(){
-	local reponame="comm-central"
+	local reponame="l10n/gecko-strings"
 
 	cd $root_path
 
@@ -676,7 +660,7 @@ function get_files_mail(){
 		then
 			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
 			if_exist_delete_create ./$omt_path/source/mail
-			cp -r ./$hg_path/$reponame/mail/${Ruta_Locales}/* ./$omt_path/source/mail
+			cp -r ./$hg_path/$reponame/mail/* ./$omt_path/source/mail
 
 			# Files to exclude of OmegaT
 			rm -r ./$omt_path/source/mail/searchplugins
@@ -726,7 +710,7 @@ function move_files_mail(){
 }
 
 function get_files_calendar(){
-	local reponame="comm-central"
+	local reponame="l10n/gecko-strings"
 
 	cd $root_path
 
@@ -734,7 +718,7 @@ function get_files_calendar(){
 		then
 			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
 			if_exist_delete_create ./$omt_path/source/calendar
-			cp -r ./$hg_path/$reponame/calendar/${Ruta_Locales}/* ./$omt_path/source/calendar
+			cp -r ./$hg_path/$reponame/calendar/* ./$omt_path/source/calendar
 
 			# Files to exclude of OmegaT
 			rm -r ./$omt_path/source/calendar/lightning-l10n.js
@@ -773,7 +757,7 @@ function move_files_calendar(){
 }
 
 function get_files_chat(){
-	local reponame="comm-central"
+	local reponame="l10n/gecko-strings"
 
 	cd $root_path
 
@@ -781,7 +765,7 @@ function get_files_chat(){
 		then
 			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
 			if_exist_delete_create ./$omt_path/source/chat
-			cp -r ./$hg_path/$reponame/chat/${Ruta_Locales}/* ./$omt_path/source/chat
+			cp -r ./$hg_path/$reponame/chat/* ./$omt_path/source/chat
 			echogreen "Copied l10n files into OmegaT."
 		else
 			echoyellow "The $reponame repository does not exist."
@@ -815,8 +799,8 @@ function move_files_chat(){
 		fi
 }
 
-function get_files_dom(){
-	local reponame="comm-central"
+function get_files_rest(){
+	local reponame="l10n/gecko-strings"
 
 	cd $root_path
 
@@ -824,81 +808,23 @@ function get_files_dom(){
 		then
 			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
 			if_exist_delete_create ./$omt_path/source/dom
-			cp -r ./$hg_path/$reponame/mozilla/dom/${Ruta_Locales}/* ./$omt_path/source/dom
-			echogreen "Copied l10n files into OmegaT."
-		else
-			echoyellow "The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
-		fi
-}
+			cp -r ./$hg_path/$reponame/dom/* ./$omt_path/source/dom
 
-function get_files_netwerk(){
-	local reponame="comm-central"
-
-	cd $root_path
-
-	if [ -d ./$hg_path/$reponame/.hg ]
-		then
-			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
 			if_exist_delete_create ./$omt_path/source/netwerk
-			cp -r ./$hg_path/$reponame/mozilla/netwerk/${Ruta_Locales}/* ./$omt_path/source/netwerk
-			echogreen "Copied l10n files into OmegaT."
-		else
-			echoyellow "The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
-		fi
-}
+			cp -r ./$hg_path/$reponame/netwerk/* ./$omt_path/source/netwerk
 
-function get_files_otherlicenses(){
-	local reponame="comm-central"
+			if_exist_delete_create ./$omt_path/source/other-licenses
+			cp -r ./$hg_path/$reponame/other-licenses/* ./$omt_path/source/other-licenses
 
-	cd $root_path
-
-	if [ -d ./$hg_path/$reponame/.hg ]
-		then
-			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
-			if_exist_delete_create ./$omt_path/source/other-licenses/branding/thunderbird
-			cp -r ./$hg_path/$reponame/other-licenses/branding/thunderbird/${Ruta_Locales}/* ./$omt_path/source/other-licenses/branding/thunderbird
-			echogreen "Copied l10n files into OmegaT."
-		else
-			echoyellow "The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
-		fi
-}
-
-function get_files_security(){
-	local reponame="comm-central"
-
-	cd $root_path
-
-	if [ -d ./$hg_path/$reponame/.hg ]
-		then
-			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
 			if_exist_delete_create ./$omt_path/source/security
-			mkdir -p ./$omt_path/source/security/manager
-			cp -r ./$hg_path/$reponame/mozilla/security/manager/${Ruta_Locales}/* ./$omt_path/source/security/manager
-			echogreen "Copied l10n files into OmegaT."
-		else
-			echoyellow "The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
-		fi
-}
+			cp -r ./$hg_path/$reponame/security/* ./$omt_path/source/security
 
-function get_files_services(){
-	local reponame="comm-central"
-
-	cd $root_path
-
-	if [ -d ./$hg_path/$reponame/.hg ]
-		then
-			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
 			if_exist_delete_create ./$omt_path/source/services
-			mkdir -p ./$omt_path/source/services/sync
-			cp -r ./$hg_path/$reponame/mozilla/services/sync/${Ruta_Locales}/* ./$omt_path/source/services/sync
+			cp -r ./$hg_path/$reponame/services/* ./$omt_path/source/services
 			echogreen "Copied l10n files into OmegaT."
 		else
 			echoyellow "The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
+			echoyellow "Try ./mozilla.sh cloneL10n to clone the $reponame repository."
 		fi
 }
 
@@ -938,7 +864,7 @@ function move_files_rest(){
 }
 
 function get_files_suite(){
-	local reponame="comm-central"
+	local reponame="l10n/gecko-strings"
 
 	cd $root_path
 
@@ -946,7 +872,7 @@ function get_files_suite(){
 		then
 			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
 			if_exist_delete_create ./$omt_path/source/suite
-			cp -r ./$hg_path/$reponame/suite/${Ruta_Locales}/* ./$omt_path/source/suite
+			cp -r ./$hg_path/$reponame/suite/* ./$omt_path/source/suite
 
 			# Files to exclude of OmegaT
 			rm -r ./$omt_path/source/suite/searchplugins
@@ -1079,7 +1005,7 @@ if [ $# -eq 0 ]
 		[ $param = updateL10n ] && update_hg_l10n
 		[ $param = cloneChannel ] && clone_hg_channel
 		[ $param = updateChannel ] && update_hg_channel
-		[ $param = getFirefox ] && get_files_browser && get_files_toolkit && get_files_dom && get_files_netwerk && get_files_otherlicenses && get_files_security && get_files_services
+		[ $param = getFirefox ] && get_files_browser && get_files_toolkit && get_files_rest
 		[ $param = moveFirefox ] && move_files_browser && move_files_toolkit && move_files_rest
 		[ $param = getFennec ] && get_files_mobile
 		[ $param = moveFennec ] && move_files_mobile
