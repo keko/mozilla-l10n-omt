@@ -572,7 +572,7 @@ function get_files_mobile(){
 			echogreen "Copied l10n files into OmegaT."
 		else
 			echoyellow "The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
+			echoyellow "Try ./mozilla.sh cloneL10n to clone the $reponame repository."
 		fi
 }
 
@@ -620,7 +620,7 @@ function get_files_editor(){
 			echogreen "Copied l10n files into OmegaT."
 		else
 			echoyellow "The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
+			echoyellow "Try ./mozilla.sh cloneL10n to clone the $reponame repository."
 		fi
 }
 
@@ -670,7 +670,7 @@ function get_files_mail(){
 			echogreen "Copied l10n files into OmegaT."
 		else
 			echoyellow "The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
+			echoyellow "Try ./mozilla.sh cloneL10n to clone the $reponame repository."
 		fi
 }
 
@@ -726,7 +726,7 @@ function get_files_calendar(){
 			echogreen "Copied l10n files into OmegaT."
 		else
 			echoyellow "The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
+			echoyellow "Try ./mozilla.sh cloneL10n to clone the $reponame repository."
 		fi
 }
 
@@ -769,7 +769,7 @@ function get_files_chat(){
 			echogreen "Copied l10n files into OmegaT."
 		else
 			echoyellow "The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
+			echoyellow "Try ./mozilla.sh cloneL10n to clone the $reponame repository."
 		fi
 }
 
@@ -886,7 +886,7 @@ function get_files_suite(){
 			echogreen "Copied l10n files into OmegaT."
 		else
 			echoyellow "The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
+			echoyellow "Try ./mozilla.sh cloneL10n to clone the $reponame repository."
 		fi
 }
 
