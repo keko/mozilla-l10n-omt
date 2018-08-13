@@ -37,7 +37,7 @@ omt_path="prox-omt-moz"
 locale_code="gl"
 
 # Note: replace "ssh:/" with "https:/" if you don't have SSH access to hg.mozilla.org
-mode="https:/"
+mode="ssh:/"
 mozilla_url="hg.mozilla.org"
 
 # "https://github.com/mozilla-l10n/$reponame.git"
@@ -339,7 +339,7 @@ function update_hg_repo(){
 
 function clone_hg_l10n(){
 	mode="https:/"
-	reponame="l10n/gecko-strings"
+	local reponame="l10n/gecko-strings"
 
 	cd $root_path
 
@@ -347,9 +347,9 @@ function clone_hg_l10n(){
 
 	if exist_hg_repo $url
 		then
-			if [ ! -d ./$hg_path/$reponame ]
+			if [ ! -d ./$hg_path/l10n ]
 				then
-					mkdir -p ./$hg_path/$reponame
+					mkdir -p ./$hg_path/l10n
 				fi
 
 			if [ -d ./$hg_path/$reponame/.hg ]
@@ -358,7 +358,7 @@ function clone_hg_l10n(){
 					echoyellow "Try ./mozilla.sh updateL10n to update the repository."
 				else
 					echogreen "Cloning the $reponame repository."
-					cd $hg_path/$reponame
+					cd $hg_path/l10n
 					hg clone $url
 					cd $root_path
 					echogreen "Cloned the $reponame repository."
@@ -391,11 +391,12 @@ function update_hg_l10n(){
 
 
 function clone_hg_channel(){
+	mode="https:/"
 	local reponame="comm-central"
 
 	cd $root_path
 
-	local url="https://$mozilla_url/$reponame"
+	local url="$mode/$mozilla_url/$reponame"
 
 	if exist_hg_repo $url
 		then
