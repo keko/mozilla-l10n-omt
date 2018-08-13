@@ -988,7 +988,7 @@ function simple_help(){
 	echo "			The cloned repository has source code and l10n files."
 	echo "			Example of usage: ./mozilla.sh cloneChannel."
 	echo "	updateChannel	Updates the comm-central repository in the framework."
-	echo "	getFirefox	Get the l10n files for the Firefox product from the comm-central repository. Copy the"
+	echo "	getFirefox	Get the l10n files for the Firefox product from the gecko-strings repository. Copy the"
 	echo "			l10n files into source folder in the OmegaT project."
 	echo "	moveFirefox	Send the translated l10n files from the OmegaT project to the local l10n-central/$locale_code repository."
 	echo "	getFennec	Similar to the 'getFirefox' task but for the Fennec project."
