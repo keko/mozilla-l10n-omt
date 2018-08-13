@@ -219,6 +219,15 @@ function update_repo_mozilla_l10n(){
 		fi
 }
 
+# Get the .xliff and .lang files from repositories cloned in local with the cloneRepo task and
+# copy the files into the source folder of the OmegaT project. For the following projects:
+#	mozilla.org
+#	engagement-l10n
+#	appstores
+#	fhr-l10n
+#	firefoxios-l10n
+#	focusios-l10n
+#############################################################################################
 function get_l10n(){
 	# $1: (project)repository name
 	local reponame="$1"
@@ -250,7 +259,6 @@ function get_l10n(){
 			if [ $locale_code="en-US" ]
 				then
 					for i in $( find ./$omt_path/source/$reponame -name "*.xliff" ); do
-						echo $i;
 						sed -i $i -e 's/target-language="en"/target-language="gl"/';
 					done
 				fi
@@ -260,6 +268,7 @@ function get_l10n(){
 		fi
 }
 
+#############################################################################################
 function return_l10n(){
 	# $1: (project)repository name
 	local reponame="$1"
@@ -290,6 +299,95 @@ function return_l10n(){
 			echoyellow "Try ./mozilla.sh cloneRepo $reponame to clone the project."
 			echoyellow "Then ./mozilla.sh getL10n $reponame to copy the l10n files into OmegaT."
 			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh returnL10n $reponame again."
+		fi
+}
+
+# Get the .pot files from repositories cloned in local with the cloneRepo task and initialize
+# the .pot files into the source folder of the OmegaT project. For the following projects:
+#	zerda-android-l10n
+#	firefoxtv-l10n
+#	focus-android-l10n
+#	mdn-l10n
+#	sumo-l10n
+#	mozillians-l10n
+#############################################################################################
+function get_l10n_pot(){
+	# $1: (project)repository name
+	local reponame="$1"
+
+	cd $root_path
+
+	if [ $reponame == "zerda-android-l10n" ] || [ $reponame == "firefoxtv-l10n" ] || [ $reponame == "focus-android-l10n" ]
+		then
+			locale_code="locales/templates"
+		else
+			locale_code="templates"
+		fi
+
+	if [ -d ./$git_path/$reponame/.git ]
+		then
+			if [ -d ./$git_path/$reponame/$locale_code ]
+				then
+					echogreen "Copying l10n files for the $reponame project into OmegaT Project."
+					if_exist_delete_create ./$omt_path/source/$reponame
+
+					cp -r ./$git_path/$reponame/$locale_code/* ./$omt_path/source/$reponame/
+
+
+					for i in $( find ./$omt_path/source/$reponame -name "*.pot" ); do
+						local target=${i%t}
+						msginit -i $i -o $target;
+						rm $i;
+					done
+
+					echogreen "Copied l10n files into OmegaT."
+				else
+					echored "The $reponame repository exist, but your locale is not actived."
+					echoyellow "Contact with the Mozilla l10n team to activate the project for your locale."
+				fi
+		else
+			echored "Error: The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneRepo $reponame to clone the project."
+		fi
+}
+
+#############################################################################################
+function return_l10n_pot(){
+	# $1: (project)repository name
+	local reponame="$1"
+	local locale="$locale_code"
+
+	cd $root_path
+
+	if [ $reponame == "zerda-android-l10n" ] || [ $reponame == "firefoxtv-l10n" ] || [ $reponame == "focus-android-l10n" ]
+		then
+			locale_code="locales/$locale"
+		fi
+
+	if [ -d ./$git_path/$reponame/.git ]
+		then
+			if [ -d ./$git_path/$reponame/$locale_code ]
+				then
+					if [ -d ./$omt_path/target/$reponame ]
+						then
+							echogreen "Updating the translations of $reponame project."
+							rm -r ./$git_path/$reponame/$locale_code/*
+							cp -r ./$omt_path/target/$reponame/* ./$git_path/$reponame/$locale_code/
+							echogreen "Updated the translations of project."
+						else
+							echored "Error: There is no translations. Do not exist the project into target folder."
+							echoyellow "Create the translated files with OmegaT and if the project does not exist into source folder:"
+							echoyellow "Execute ./mozilla.sh getL10nPot $reponame to copy the l10n files into OmegaT."
+					fi
+				else
+					echored "The $reponame repository exist, but your locale is not actived."
+					echoyellow "Contact with the Mozilla l10n team to activate the project for your locale."
+				fi
+		else
+			echored "Error: The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneRepo $reponame to clone the project."
+			echoyellow "Then ./mozilla.sh getL10nPot $reponame to copy the l10n files into OmegaT."
+			echoyellow "Finally create the translated files with OmegaT and execute ./mozilla.sh returnL10nPot $reponame again."
 		fi
 }
 
@@ -970,10 +1068,14 @@ function simple_help(){
 	echo "			Example of usage: ./mozilla.sh cloneRepo www.mozilla.org"
 	echo "	updateRepo	Updates the selected repository in the framework. Updates the cloned repositories"
 	echo "			with the 'cloneRepo' task."
-	echo "	getL10n		Get the l10n files for the selected repository. Copy the l10n files of project"
-	echo "			selected into source folder in the OmegaT project. Works with the cloned repositories"
-	echo "			with the 'cloneRepo' task."
+	echo "	getL10n		Get the l10n files for the selected repository (projects with .lang and .xliff files)."
+	echo "			Copy the l10n files of project selected into source folder in the OmegaT project."
+	echo "			Works with the cloned repositories with the 'cloneRepo' task."
 	echo "	returnL10n	Send the translated l10n files from the OmegaT project to the local repository."
+	echo "	getL10nPot	Get the l10n files for the selected repository (projects with .po files). Similar to"
+	echo "			getL10n but with other type of projects."
+	echo "	returnL10nPot	Send the translated l10n files from the OmegaT project to the local repository."
+	echo "			Similar to returnL10n but with other type of projects."
 	echo ""
 	echo "	cloneHg		Clone the l10n-central/$locale_code repository in the framework."
 	echo "			The cloned repository has only l10n files."
@@ -1016,6 +1118,8 @@ if [ $# -eq 0 ]
 		[ $param = updateRepo ] && update_repo_mozilla_l10n $2
 		[ $param = getL10n ] && get_l10n $2
 		[ $param = returnL10n ] && return_l10n $2
+		[ $param = getL10nPot ] && get_l10n_pot $2
+		[ $param = returnL10nPot ] && return_l10n_pot $2
 		[ $param = cloneHg ] && clone_hg_repo
 		[ $param = updateHg ] && update_hg_repo
 		[ $param = cloneL10n ] && clone_hg_l10n
