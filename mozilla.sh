@@ -225,6 +225,13 @@ function get_l10n(){
 
 	cd $root_path
 
+	## Added support for the firefoxios and focusios projects
+	if [ $reponame == "firefoxios-l10n" ] || [ $reponame == "focusios-l10n" ]
+		then
+			locale_code="en-US"
+		fi
+
+
 	if [ -d ./$git_path/$reponame/.git ]
 		then
 			if [ -d ./$git_path/$reponame/$locale_code ]
@@ -237,6 +244,15 @@ function get_l10n(){
 				else
 					echored "The $reponame repository exist, but your locale is not actived."
 					echoyellow "Contact with the Mozilla l10n team to activate the project for your locale."
+				fi
+
+			## Added support for the firefoxios and focusios projects
+			if [ $locale_code="en-US" ]
+				then
+					for i in $( find ./$omt_path/source/$reponame -name "*.xliff" ); do
+						echo $i;
+						sed -i $i -e 's/target-language="en"/target-language="gl"/';
+					done
 				fi
 		else
 			echored "Error: The $reponame repository does not exist."
