@@ -559,6 +559,13 @@ function update_hg_channel(){
 
 
 #############################################################################################
+function get_ftl_files(){
+	cd $root_path
+	# To delete the .ftl files (OmegaT do not support this type of files)
+	cd ./$omt_path/source
+	find . -name "*.ftl" -exec cp {} /home/keko/prox-flt-files/source \;
+}
+
 function get_files_browser(){
 	local reponame="l10n/gecko-strings"
 
@@ -569,9 +576,46 @@ function get_files_browser(){
 			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
 			if_exist_delete_create ./$omt_path/source/browser
 			cp -r ./$hg_path/$reponame/browser/* ./$omt_path/source/browser
-			mkdir -p ./$omt_path/source/devtools
+			if_exist_delete_create ./$omt_path/source/devtools
 			cp -r ./$hg_path/$reponame/devtools/* ./$omt_path/source/devtools
 
+			# Files to exclude of OmegaT
+			# Bug 1276740 - Centralize all search plugins into mozilla-central
+			# rm -r ./$omt_path/source/$reponame/browser/searchplugins
+			rm -r ./$omt_path/source/browser/chrome/browser-region
+			rm -r ./$omt_path/source/browser/defines.inc
+			rm -r ./$omt_path/source/browser/firefox-l10n.js
+			# To delete the bookmarks.inc file
+			rm -r ./$omt_path/source/browser/profile
+			echogreen "Copied l10n files into OmegaT."
+		else
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneL10n to clone the $reponame repository."
+		fi
+}
+
+function get_files_browser_u(){
+	local reponame="mozilla-unified"
+
+	cd $root_path
+
+	if [ -d ./$hg_path/$reponame/.hg ]
+		then
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/browser
+			cp -r ./$hg_path/$reponame/browser/${Ruta_Locales}/* ./$omt_path/source/browser
+			mkdir -p ./$omt_path/source/browser/extensions/formautofill
+			cp -r ./$hg_path/$reponame/browser/extensions/formautofill/${Ruta_Locales}/* ./$omt_path/source/browser/extensions/formautofill
+			mkdir -p ./$omt_path/source/browser/extensions/webcompat-reporter
+			cp -r ./$hg_path/$reponame/browser/extensions/webcompat-reporter/${Ruta_Locales}/* ./$omt_path/source/browser/extensions/webcompat-reporter
+			mkdir -p ./$omt_path/source/devtools/client
+			mkdir -p ./$omt_path/source/devtools/shared
+			mkdir -p ./$omt_path/source/devtools/startup
+			cp -r ./$hg_path/$reponame/devtools/client/${Ruta_Locales}/* ./$omt_path/source/devtools/client
+			cp -r ./$hg_path/$reponame/devtools/shared/${Ruta_Locales}/* ./$omt_path/source/devtools/shared
+			cp -r ./$hg_path/$reponame/devtools/startup/${Ruta_Locales}/* ./$omt_path/source/devtools/startup
+			mkdir -p ./$omt_path/source/browser/branding/official
+			cp -r ./$hg_path/$reponame/browser/branding/official/${Ruta_Locales}/* ./$omt_path/source/browser/branding/official
 			# Files to exclude of OmegaT
 			# Bug 1276740 - Centralize all search plugins into mozilla-central
 			# rm -r ./$omt_path/source/$reponame/browser/searchplugins
@@ -583,7 +627,7 @@ function get_files_browser(){
 			echogreen "Copied l10n files into OmegaT."
 		else
 			echoyellow "The $reponame repository does not exist."
-			echoyellow "Try ./mozilla.sh cloneL10n to clone the $reponame repository."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
@@ -598,17 +642,18 @@ function move_files_browser(){
 			if [ -d ./$omt_path/target/browser ]
 				then
 					echogreen "Updating the translations of $reponame/$locale_code repository."
-					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/branding
-					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/crashreporter
-					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/installer
-					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/pdfviewer
-					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/updater
-					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/chrome/browser
-					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/chrome/overrides
-					if_exist_delete ./$hg_path/$reponame/$locale_code/browser/extensions
-					if_exist_delete ./$hg_path/$reponame/$locale_code/devtools
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/browser/branding
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/browser/crashreporter
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/browser/installer
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/browser/pdfviewer
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/browser/updater
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/browser/chrome/browser
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/browser/chrome/overrides
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/browser/extensions
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/devtools
 					cp -r ./$omt_path/target/browser/* ./$hg_path/$reponame/$locale_code/browser/
-					cp -r ./$omt_path/target/devtools ./$hg_path/$reponame/$locale_code/
+
+					cp -r ./$omt_path/target/devtools/* ./$hg_path/$reponame/$locale_code/devtools/
 					echogreen "Updated the translations of repository."
 				else
 					echored "Error: There is no translations. Do not exist the project into target folder."
@@ -643,6 +688,26 @@ function get_files_toolkit(){
 		fi
 }
 
+function get_files_toolkit_u(){
+	local reponame="mozilla-unified"
+
+	cd $root_path
+
+	if [ -d ./$hg_path/$reponame/.hg ]
+		then
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/toolkit
+			cp -r ./$hg_path/$reponame/toolkit/${Ruta_Locales}/* ./$omt_path/source/toolkit
+
+			# Files to exclude of OmegaT
+			rm -r ./$omt_path/source/toolkit/defines.inc
+			echogreen "Copied l10n files into OmegaT."
+		else
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
+		fi
+}
+
 function move_files_toolkit(){
 	local reponame="l10n-central"
 
@@ -653,8 +718,8 @@ function move_files_toolkit(){
 			if [ -d ./$omt_path/target/toolkit ]
 				then
 					echogreen "Updating the translations of $reponame/$locale_code repository."
-					if_exist_delete ./$hg_path/$reponame/$locale_code/toolkit/chrome
-					if_exist_delete ./$hg_path/$reponame/$locale_code/toolkit/crashreporter
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/toolkit/chrome
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/toolkit/crashreporter
 					cp -r ./$omt_path/target/toolkit/* ./$hg_path/$reponame/$locale_code/toolkit/
 					echogreen "Updated the translations of repository."
 				else
@@ -701,10 +766,10 @@ function move_files_mobile(){
 			if [ -d ./$omt_path/target/mobile ]
 				then
 					echogreen "Updating the translations of $reponame/$locale_code repository."
-					if_exist_delete ./$hg_path/$reponame/$locale_code/mobile/android/base
-					if_exist_delete ./$hg_path/$reponame/$locale_code/mobile/android/chrome
-					if_exist_delete ./$hg_path/$reponame/$locale_code/mobile/overrides
-					if_exist_delete ./$hg_path/$reponame/$locale_code/mobile/xul
+					# if_exist_delete ./$hg_path/$reponame/$locale_code/mobile/android/base
+					# if_exist_delete ./$hg_path/$reponame/$locale_code/mobile/android/chrome
+					# if_exist_delete ./$hg_path/$reponame/$locale_code/mobile/overrides
+					# if_exist_delete ./$hg_path/$reponame/$locale_code/mobile/xul
 					cp -r ./$omt_path/target/mobile/* ./$hg_path/$reponame/$locale_code/mobile/
 					echogreen "Updated the translations of repository."
 				else
@@ -928,9 +993,6 @@ function get_files_rest(){
 			if_exist_delete_create ./$omt_path/source/netwerk
 			cp -r ./$hg_path/$reponame/netwerk/* ./$omt_path/source/netwerk
 
-			if_exist_delete_create ./$omt_path/source/other-licenses
-			cp -r ./$hg_path/$reponame/other-licenses/* ./$omt_path/source/other-licenses
-
 			if_exist_delete_create ./$omt_path/source/security
 			cp -r ./$hg_path/$reponame/security/* ./$omt_path/source/security
 
@@ -940,6 +1002,34 @@ function get_files_rest(){
 		else
 			echoyellow "The $reponame repository does not exist."
 			echoyellow "Try ./mozilla.sh cloneL10n to clone the $reponame repository."
+		fi
+}
+
+function get_files_rest_u(){
+	local reponame="mozilla-unified"
+
+	cd $root_path
+
+	if [ -d ./$hg_path/$reponame/.hg ]
+		then
+			echogreen "Copying l10n files for the $reponame repository into OmegaT Project."
+			if_exist_delete_create ./$omt_path/source/dom
+			cp -r ./$hg_path/$reponame/dom/${Ruta_Locales}/* ./$omt_path/source/dom
+
+			if_exist_delete_create ./$omt_path/source/netwerk
+			cp -r ./$hg_path/$reponame/netwerk/${Ruta_Locales}/* ./$omt_path/source/netwerk
+
+			if_exist_delete_create ./$omt_path/source/security
+			mkdir -p ./$omt_path/source/security/manager
+			cp -r ./$hg_path/$reponame/security/manager/${Ruta_Locales}/* ./$omt_path/source/security/manager
+
+			if_exist_delete_create ./$omt_path/source/services
+			mkdir -p ./$omt_path/source/services/sync
+			cp -r ./$hg_path/$reponame/services/sync/${Ruta_Locales}/* ./$omt_path/source/services/sync
+			echogreen "Copied l10n files into OmegaT."
+		else
+			echoyellow "The $reponame repository does not exist."
+			echoyellow "Try ./mozilla.sh cloneChannel to clone the $reponame repository."
 		fi
 }
 
@@ -953,15 +1043,14 @@ function move_files_rest(){
 			if [ -d ./$omt_path/target ]
 				then
 					echogreen "Updating the translations of $reponame/$locale_code repository."
-					if_exist_delete ./$hg_path/$reponame/$locale_code/dom
-					if_exist_delete ./$hg_path/$reponame/$locale_code/netwerk
-					if_exist_delete ./$hg_path/$reponame/$locale_code/other-licenses
-					if_exist_delete ./$hg_path/$reponame/$locale_code/security
-					if_exist_delete ./$hg_path/$reponame/$locale_code/services
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/dom
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/netwerk
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/other-licenses
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/security
+					## if_exist_delete ./$hg_path/$reponame/$locale_code/services
 
 					cp -r ./$omt_path/target/dom ./$hg_path/$reponame/$locale_code/
 					cp -r ./$omt_path/target/netwerk ./$hg_path/$reponame/$locale_code/
-					cp -r ./$omt_path/target/other-licenses ./$hg_path/$reponame/$locale_code/
 					cp -r ./$omt_path/target/security ./$hg_path/$reponame/$locale_code/
 					cp -r ./$omt_path/target/services ./$hg_path/$reponame/$locale_code/
 					echogreen "Updated the translations of repository."
@@ -1126,11 +1215,12 @@ if [ $# -eq 0 ]
 		[ $param = updateL10n ] && update_hg_l10n
 		[ $param = cloneChannel ] && clone_hg_channel
 		[ $param = updateChannel ] && update_hg_channel
-		[ $param = getFirefox ] && get_files_browser && get_files_toolkit && get_files_rest
+		[ $param = getFirefox ] && get_files_browser && get_files_toolkit && get_files_rest && get_ftl_files
+		[ $param = getFirefoxU ] && get_files_browser_u && get_files_toolkit_u && get_files_rest_u && get_ftl_files
 		[ $param = moveFirefox ] && move_files_browser && move_files_toolkit && move_files_rest
-		[ $param = getFennec ] && get_files_mobile
+		[ $param = getFennec ] && get_files_mobile && get_ftl_files
 		[ $param = moveFennec ] && move_files_mobile
-		[ $param = getThunderbird ] && get_files_mail && get_files_editor && get_files_chat && get_files_calendar
+		[ $param = getThunderbird ] && get_files_mail && get_files_editor && get_files_chat && get_files_calendar && get_ftl_files
 		[ $param = moveThunderbird ] && move_files_mail && move_files_editor && move_files_chat && move_files_calendar
 		[ $param = getSeaMonkey ] && get_files_suite
 		[ $param = moveSeaMonkey ] && move_files_suite
